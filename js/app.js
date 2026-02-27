@@ -125,31 +125,38 @@ function bindEventListeners() {
 }
 
 // 显示我的预定
-function showMyBookings() {
-    const bookings = dataManager.getAllBookings();
+async function showMyBookings() {
+    try {
+        const bookings = await dataManager.getAllBookings();
 
-    if (bookings.length === 0) {
-        alert('您还没有任何预定记录');
-        return;
+        if (!bookings || bookings.length === 0) {
+            alert('您还没有任何预定记录');
+            return;
+        }
+
+        let message = '=== 我的预定记录 ===\n\n';
+
+        for (let index = 0; index < bookings.length; index++) {
+            const booking = bookings[index];
+            const vehicle = await dataManager.getVehicleById(booking.vehicleId);
+            const vehicleName = vehicle ? (vehicle.model || vehicle.vehicle) : '未知车辆';
+
+            message += `【预定 ${index + 1}】\n`;
+            message += `车辆: ${vehicleName}\n`;
+            message += `申请原因: ${booking.reason}\n`;
+            message += `开始时间: ${formatDateTime(booking.startTime)}\n`;
+            message += `结束时间: ${formatDateTime(booking.endTime)}\n`;
+            message += `申请人: ${booking.person}\n`;
+            message += `状态: ${booking.returned ? '已还车' : '使用中'}\n`;
+            message += `预定时间: ${formatDateTime(booking.createdAt)}\n`;
+            message += '\n---\n\n';
+        }
+
+        alert(message);
+    } catch (error) {
+        console.error('加载预定记录失败:', error);
+        alert('加载预定记录失败，请稍后重试');
     }
-
-    let message = '=== 我的预定记录 ===\n\n';
-
-    bookings.forEach((booking, index) => {
-        const vehicle = dataManager.getVehicleById(booking.vehicleId);
-        const vehicleName = vehicle ? vehicle[FIELD_NAMES.model] : '未知车辆';
-
-        message += `【预定 ${index + 1}】\n`;
-        message += `车辆: ${vehicleName}\n`;
-        message += `申请原因: ${booking[FIELD_NAMES.reason]}\n`;
-        message += `开始时间: ${formatDateTime(booking[FIELD_NAMES.startTime])}\n`;
-        message += `结束时间: ${formatDateTime(booking[FIELD_NAMES.endTime])}\n`;
-        message += `申请人: ${booking[FIELD_NAMES.person]}\n`;
-        message += `预定时间: ${formatDateTime(booking.createdAt)}\n`;
-        message += '\n---\n\n';
-    });
-
-    alert(message);
 }
 
 // 格式化日期时间
