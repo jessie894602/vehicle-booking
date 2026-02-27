@@ -141,11 +141,11 @@ async function showMyBookings() {
 
         const bookings = await dataManager.getAllBookings();
 
-        // 筛选出当前用户的预定记录
-        const myBookings = bookings.filter(b => b.person === currentUser);
+        // 筛选出当前用户的未还车预定记录
+        const myBookings = bookings.filter(b => b.person === currentUser && !b.returned);
 
         if (!myBookings || myBookings.length === 0) {
-            alert(`${currentUser}，您还没有任何预定记录`);
+            alert(`${currentUser}，您还没有进行中的预定`);
             return;
         }
 
