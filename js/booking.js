@@ -606,8 +606,6 @@ async function showMyBookings() {
             message += `开始时间: ${formatDateTime(booking.startTime)}\n`;
             message += `结束时间: ${formatDateTime(booking.endTime)}\n`;
             message += `申请人: ${booking.person}\n`;
-            message += `状态: ${booking.returned ? '已还车' : '使用中'}\n`;
-            message += `预定时间: ${formatDateTime(booking.createdAt)}\n`;
             message += '\n---\n\n';
         }
 
