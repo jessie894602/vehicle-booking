@@ -138,12 +138,10 @@ class DataManager {
 
     async isVehicleInUse(vehicleId) {
         const bookings = await this.getBookingsByVehicleId(vehicleId);
-        const now = new Date();
 
+        // 只要有未还车的预定，就显示"使用中"
         for (const booking of bookings) {
-            const startTime = new Date(booking[FIELD_NAMES.startTime]);
-            const endTime = new Date(booking[FIELD_NAMES.endTime]);
-            if (now >= startTime && now <= endTime) {
+            if (!booking.returned) {
                 return { inUse: true, booking: booking };
             }
         }
