@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="车辆预定系统 - 浏览和预定可用车辆">
+    <title>车辆预定系统 - 车辆列表</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">车辆预定系统</a>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">车辆列表</a>
+                    <a href="statistics.html" class="nav-link">使用统计</a>
+                    <a href="#" class="nav-link" id="myBookingsLink">我的预定</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="main-content">
+        <div class="container">
+            <!-- 预定提示框 -->
+            <div id="bookingNotification" class="booking-notification hidden">
+                <div class="notification-content">
+                    <span class="notification-icon">✓</span>
+                    <span class="notification-message"></span>
+                    <button class="notification-close" onclick="closeNotification()">×</button>
+                </div>
+            </div>
+
+            <h1 class="page-title">可预定车辆 <span class="page-subtitle">（点击卡片可预约）</span></h1>
+
+            <!-- 车辆列表加载状态 -->
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+
+            <!-- 车辆卡片网格 -->
+            <div id="vehiclesGrid" class="vehicles-grid hidden"></div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="text-center hidden" style="padding: 60px 20px;">
+                <h2 style="color: #999;">暂无可用车辆</h2>
+                <p style="color: #666;">请稍后再试</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 车辆预定系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="js/data-jsonbin.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

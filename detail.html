@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="车辆预定系统 - 车辆详情与预定">
+    <title>车辆详情 - 车辆预定系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">车辆预定系统</a>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">车辆列表</a>
+                    <a href="statistics.html" class="nav-link">使用统计</a>
+                    <a href="#" class="nav-link" id="myBookingsLink">我的预定</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="main-content">
+        <div class="container detail-container">
+            <a href="index.html" class="back-btn">
+                <span>&larr;</span>
+                <span>返回列表</span>
+            </a>
+
+            <!-- 加载状态 -->
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+
+            <!-- 车辆详情卡片 -->
+            <div id="vehicleDetailCard" class="vehicle-detail-card hidden">
+                <div class="detail-header">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <h1 class="detail-title" id="vehicleModel">车辆型号</h1>
+                        <span class="status-badge" id="vehicleStage">在用</span>
+                    </div>
+                </div>
+
+                <!-- 车辆图片 -->
+                <img id="vehicleImage" src="" alt="车辆图片" class="vehicle-image" style="border-radius: 8px; margin-bottom: 20px;">
+
+                <!-- 车辆信息网格 -->
+                <div class="detail-grid">
+                    <div class="detail-field">
+                        <div class="field-label">车辆编码</div>
+                        <div class="field-value" id="vehicleCode">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">VIN码</div>
+                        <div class="field-value" id="vehicleVin">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">车辆</div>
+                        <div class="field-value" id="vehicleVehicle">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">车辆位置</div>
+                        <div class="field-value" id="vehicleLocation">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">车辆阶段</div>
+                        <div class="field-value" id="vehicleStageDetail">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">内外饰颜色</div>
+                        <div class="field-value" id="vehicleColor">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">车牌号</div>
+                        <div class="field-value vehicle-plate" id="vehiclePlateNumber">-</div>
+                    </div>
+                    <div class="detail-field">
+                        <div class="field-label">钥匙位置</div>
+                        <div class="field-value" id="vehicleKeyLocation">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 预定历史记录 -->
+            <div id="bookingHistoryContainer" class="booking-form hidden" style="margin-bottom: 30px;">
+                <h2 class="form-title">预定历史记录</h2>
+                <div id="bookingHistoryList"></div>
+            </div>
+
+            <!-- 预定表单 -->
+            <div id="bookingFormContainer" class="booking-form hidden">
+                <h2 class="form-title">预定车辆</h2>
+
+                <!-- 提示信息 -->
+                <div id="alertMessage" class="hidden"></div>
+
+                <form id="bookingForm">
+                    <!-- 申请原因 -->
+                    <div class="form-group">
+                        <label for="reason" class="form-label">
+                            申请原因
+                            <span class="required">*</span>
+                        </label>
+                        <textarea
+                            id="reason"
+                            name="reason"
+                            class="form-control"
+                            placeholder="请输入申请原因"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <!-- 时间选择 -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime" class="form-label">
+                                开始时间
+                                <span class="required">*</span>
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="startTime"
+                                name="startTime"
+                                class="form-control"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="endTime" class="form-label">
+                                结束时间
+                                <span class="required">*</span>
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="endTime"
+                                name="endTime"
+                                class="form-control"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- 人员姓名 -->
+                    <div class="form-group">
+                        <label for="person" class="form-label">
+                            申请人姓名
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="person"
+                            name="person"
+                            class="form-control"
+                            placeholder="请输入申请人姓名"
+                            required
+                        >
+                    </div>
+
+                    <!-- 提交按钮 -->
+                    <button type="submit" class="submit-btn">
+                        提交预定
+                    </button>
+                </form>
+            </div>
+
+            <!-- 车辆未找到 -->
+            <div id="notFoundState" class="text-center hidden" style="padding: 60px 20px;">
+                <h2 style="color: #999;">车辆不存在</h2>
+                <p style="color: #666;">请返回列表重新选择</p>
+                <a href="index.html" class="view-detail-btn" style="max-width: 200px; margin: 20px auto; display: block;">返回列表</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 车辆预定系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="js/feishu-integration.js?v=2"></script>
+    <script src="js/data-jsonbin.js?v=3"></script>
+    <script src="js/booking.js?v=5"></script>
+</body>
+</html>

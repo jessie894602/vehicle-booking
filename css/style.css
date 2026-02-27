@@ -1,0 +1,1002 @@
+/* 车辆预定系统 - 样式文件 */
+
+/* ========== 全局样式 ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #4A90E2;
+    --secondary-color: #f8f9fa;
+    --success-color: #50C878;
+    --danger-color: #E94B3C;
+    --text-dark: #333;
+    --text-light: #666;
+    --border-color: #ddd;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+    background-color: var(--secondary-color);
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* ========== 顶部导航 ========== */
+.header {
+    background-color: white;
+    box-shadow: var(--shadow);
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: var(--transition);
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.nav-link:hover {
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+}
+
+/* ========== 主体内容 ========== */
+.main-content {
+    padding: 20px 0;
+    min-height: calc(100vh - 200px);
+}
+
+.page-title {
+    font-size: 26px;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+}
+
+.page-subtitle {
+    font-size: 14px;
+    font-weight: normal;
+    color: var(--text-light);
+    margin-left: 8px;
+}
+
+/* ========== 车辆卡片网格 ========== */
+.vehicles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.vehicle-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+}
+
+.vehicle-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.vehicle-booking-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.vehicle-badge-free {
+    background-color: var(--success-color);
+}
+
+.vehicle-badge-busy {
+    background-color: var(--danger-color);
+}
+
+.vehicle-status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.vehicle-status-free {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.vehicle-status-busy {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.vehicle-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background-color: var(--secondary-color);
+}
+
+.vehicle-info {
+    padding: 10px;
+    padding-top: 10px;
+}
+
+.vehicle-model {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+}
+
+.vehicle-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.detail-label {
+    font-weight: 600;
+    margin-right: 8px;
+    min-width: 60px;
+}
+
+.detail-value {
+    color: var(--text-dark);
+}
+
+.vehicle-status-info {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.status-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.status-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.status-info-label {
+    font-weight: 600;
+    color: #856404;
+}
+
+.status-info-value {
+    color: #856404;
+    font-weight: 500;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background-color: var(--success-color);
+    color: white;
+}
+
+.view-detail-btn {
+    width: 100%;
+    padding: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.view-detail-btn:hover {
+    background-color: #3a7bc8;
+}
+
+/* ========== 详情页 ========== */
+.detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-dark);
+    text-decoration: none;
+    margin-bottom: 15px;
+    transition: var(--transition);
+}
+
+.back-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.vehicle-detail-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.detail-header {
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.detail-title {
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.detail-field {
+    padding: 10px 12px;
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+}
+
+.field-label {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.field-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ========== 预定表单 ========== */
+.booking-form {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.form-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: var(--text-dark);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
+
+.required {
+    color: var(--danger-color);
+    margin-left: 3px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+}
+
+.submit-btn:hover {
+    background-color: #45b869;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.submit-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ========== 提示消息 ========== */
+.alert {
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* ========== 页脚 ========== */
+.footer {
+    background-color: white;
+    padding: 15px 0;
+    text-align: center;
+    color: var(--text-light);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    margin-top: 30px;
+}
+
+/* ========== 加载动画 ========== */
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    border: 4px solid var(--secondary-color);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========== 预定历史记录 ========== */
+.booking-history-item {
+    background-color: var(--secondary-color);
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--primary-color);
+    position: relative;
+}
+
+.booking-history-item.returned {
+    opacity: 0.6;
+    border-left-color: #999;
+}
+
+.booking-history-item:last-child {
+    margin-bottom: 0;
+}
+
+.booking-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.booking-person {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 15px;
+}
+
+.booking-date {
+    font-size: 11px;
+    color: var(--text-light);
+}
+
+.booking-time-range {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.time-badge {
+    background-color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.time-arrow {
+    color: var(--text-light);
+}
+
+.booking-reason {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #ddd;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.btn-return {
+    flex: 1;
+    padding: 6px 12px;
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-return:hover {
+    background-color: #45b869;
+    transform: translateY(-1px);
+}
+
+.btn-delete {
+    padding: 6px 12px;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-delete:hover {
+    background-color: #d43b2f;
+    transform: translateY(-1px);
+}
+
+.returned-badge {
+    display: inline-block;
+    background-color: #999;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.history-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.btn-clear {
+    padding: 8px 16px;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-clear:hover {
+    background-color: #d43b2f;
+}
+
+.btn-clear-returned {
+    padding: 8px 16px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-clear-returned:hover {
+    background-color: #555;
+}
+
+.no-bookings {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-light);
+}
+
+/* ========== 统计页面 ========== */
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.stat-icon {
+    font-size: 32px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 3px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.statistics-list {
+    margin-top: 25px;
+}
+
+.stat-vehicle-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.stat-vehicle-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.stat-vehicle-card.no-data {
+    opacity: 0.6;
+}
+
+.stat-vehicle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+.stat-vehicle-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-vehicle-image {
+    width: 70px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.stat-vehicle-model {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: var(--text-dark);
+}
+
+.stat-vehicle-details {
+    font-size: 13px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.stat-badge-active {
+    background-color: var(--success-color);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.stat-badge-inactive {
+    background-color: #999;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.stat-vehicle-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.stat-metric {
+    background: var(--secondary-color);
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.metric-icon {
+    font-size: 20px;
+}
+
+.metric-content {
+    flex: 1;
+}
+
+.metric-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 2px;
+}
+
+.metric-label {
+    font-size: 11px;
+    color: var(--text-light);
+}
+
+.stat-vehicle-details-section {
+    background: var(--secondary-color);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.stat-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.stat-detail-row:not(:last-child) {
+    border-bottom: 1px solid #ddd;
+}
+
+.stat-detail-label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.stat-detail-value {
+    color: var(--text-light);
+}
+
+.stat-no-data {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-light);
+}
+
+/* ========== 响应式设计 ========== */
+
+/* 平板设备 */
+@media (max-width: 1024px) {
+    .vehicles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+}
+
+/* 移动设备 */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .vehicles-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .vehicle-detail-card,
+    .booking-form {
+        padding: 20px;
+    }
+
+    .detail-title {
+        font-size: 22px;
+    }
+
+    .form-title {
+        font-size: 20px;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .nav-link {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        font-size: 20px;
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .vehicle-model {
+        font-size: 18px;
+    }
+
+    .detail-title {
+        font-size: 20px;
+    }
+
+    .vehicle-detail-card,
+    .booking-form {
+        padding: 15px;
+    }
+}
+
+/* ========== 工具类 ========== */
+.text-center {
+    text-align: center;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ========== 预定提示框 ========== */
+.booking-notification {
+    position: fixed;
+    top: 100px;
+    right: 30px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-content {
+    background: white;
+    border-left: 4px solid var(--success-color);
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    max-width: 400px;
+}
+
+.notification-icon {
+    background-color: var(--success-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.notification-message {
+    flex: 1;
+    color: var(--text-dark);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: var(--transition);
+}
+
+.notification-close:hover {
+    color: var(--text-dark);
+}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="车辆使用统计 - 查看每辆车的使用情况">
+    <title>车辆使用统计 - 车辆预定系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">车辆预定系统</a>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">车辆列表</a>
+                    <a href="statistics.html" class="nav-link">使用统计</a>
+                    <a href="#" class="nav-link" id="myBookingsLink">我的预定</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="main-content">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 class="page-title">车辆使用统计</h1>
+                <button id="clearStatsBtn" class="btn-clear">清除所有统计</button>
+            </div>
+
+            <!-- 统计概览 -->
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-icon">🚗</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalVehicles">0</div>
+                        <div class="stat-label">车辆总数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalUsages">0</div>
+                        <div class="stat-label">总使用次数</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalHours">0</div>
+                        <div class="stat-label">总使用时长(小时)</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">使用人数</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 车辆统计列表 -->
+            <div class="statistics-list">
+                <h2 style="margin-bottom: 20px;">车辆详细统计</h2>
+                <div id="statisticsList"></div>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="text-center hidden" style="padding: 60px 20px;">
+                <h2 style="color: #999;">暂无使用统计</h2>
+                <p style="color: #666;">还没有车辆被使用过</p>
+                <a href="index.html" class="view-detail-btn" style="max-width: 200px; margin: 20px auto; display: block;">查看车辆列表</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 车辆预定系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="js/data.js"></script>
+    <script src="js/statistics.js"></script>
+</body>
+</html>
