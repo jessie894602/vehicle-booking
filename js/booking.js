@@ -571,17 +571,32 @@ function showError(message) {
 // 显示我的预定
 async function showMyBookings() {
     try {
+        // 获取当前用户姓名
+        let currentUser = feishuIntegration.getSavedUserInfo();
+
+        // 如果没有保存的姓名，提示用户输入
+        if (!currentUser) {
+            currentUser = prompt('请输入您的姓名以查看您的预定记录:');
+            if (!currentUser || !currentUser.trim()) {
+                return;
+            }
+            currentUser = currentUser.trim();
+        }
+
         const bookings = await dataManager.getAllBookings();
 
-        if (!bookings || bookings.length === 0) {
-            alert('您还没有任何预定记录');
+        // 筛选出当前用户的预定记录
+        const myBookings = bookings.filter(b => b.person === currentUser);
+
+        if (!myBookings || myBookings.length === 0) {
+            alert(`${currentUser}，您还没有任何预定记录`);
             return;
         }
 
-        let message = '=== 我的预定记录 ===\n\n';
+        let message = `=== ${currentUser} 的预定记录 ===\n\n`;
 
-        for (let index = 0; index < bookings.length; index++) {
-            const booking = bookings[index];
+        for (let index = 0; index < myBookings.length; index++) {
+            const booking = myBookings[index];
             const vehicle = await dataManager.getVehicleById(booking.vehicleId);
             const vehicleName = vehicle ? (vehicle.model || vehicle.vehicle) : '未知车辆';
 
