@@ -605,7 +605,6 @@ async function showMyBookings() {
             message += `申请原因: ${booking.reason}\n`;
             message += `开始时间: ${formatDateTime(booking.startTime)}\n`;
             message += `结束时间: ${formatDateTime(booking.endTime)}\n`;
-            message += `申请人: ${booking.person}\n`;
             message += '\n---\n\n';
         }
 
