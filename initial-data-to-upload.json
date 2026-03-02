@@ -1,0 +1,47 @@
+{
+  "vehicles": [
+    {
+      "id": "VEH001",
+      "code": "765772",
+      "model": "Model3",
+      "color": "Model3白色黑色黑色 5座",
+      "plateNumber": "京ACV6773",
+      "location": "北京市",
+      "city": "北京市",
+      "vin": "LRW3E7EKXSC495307",
+      "series": "特斯拉",
+      "vehicle": "Model3",
+      "stage": "SOP",
+      "image": "https://via.placeholder.com/400x300/4A90E2/ffffff?text=Model3"
+    },
+    {
+      "id": "VEH002",
+      "code": "763702",
+      "model": "W02 Ultra",
+      "color": "小象灰拼黑外/黑深灰灰内/ULTRA/21寸全涂轮",
+      "plateNumber": "",
+      "location": "常州市",
+      "city": "常州市",
+      "vin": "HLX13B176S1200049",
+      "series": "W02",
+      "vehicle": "W02 Ultra",
+      "stage": "PPV",
+      "image": "https://via.placeholder.com/400x300/6A4C93/ffffff?text=W02"
+    },
+    {
+      "id": "VEH003",
+      "code": "763520",
+      "model": "MEGA MAX",
+      "color": "科技绿/爱马仕橙/HRE/7座",
+      "plateNumber": "",
+      "location": "",
+      "city": "北京市",
+      "vin": "HLX14B170S1996293",
+      "series": "理想MEGA",
+      "vehicle": "MEGA MAX",
+      "stage": "EP2",
+      "image": "https://via.placeholder.com/400x300/9B59B6/ffffff?text=MEGA+MAX"
+    }
+  ],
+  "bookings": []
+}

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>添加更多车辆</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #1976d2; }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .vehicle-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .vehicle-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 车辆管理工具</h1>
+        <p>当前 JSONBin 中的车辆数据管理</p>
+
+        <div class="button-group">
+            <button class="btn-secondary" onclick="viewCurrentVehicles()">查看当前车辆</button>
+            <button class="btn-primary" onclick="addMoreVehicles()">添加全部17辆车</button>
+            <button class="btn-danger" onclick="resetToThree()">重置为3辆车</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const MASTER_KEY = '$2a$10$0.el1vGg3USJgC1Gtui4k.FbLS9R6XHKyqM6n7YS9HjQgm2trFXW.';
+        const BIN_ID = '699fd213d0ea881f40da7ef2';
+
+        async function viewCurrentVehicles() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在获取数据...</p>';
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                const data = await response.json();
+                const vehicles = data.record.vehicles || [];
+
+                let html = `<div class="info">
+                    <h3>📋 当前车辆列表（共 ${vehicles.length} 辆）</h3>
+                    <div class="vehicle-list">`;
+
+                vehicles.forEach((v, index) => {
+                    html += `
+                        <div class="vehicle-item">
+                            <strong>${index + 1}. ${v.model || v.vehicle || '未知'}</strong>
+                            (${v.series || '-'}) - ${v.location || v.city || '-'} - ${v.stage || '-'}
+                        </div>`;
+                });
+
+                html += `</div></div>`;
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ 错误: ${error.message}</div>`;
+            }
+        }
+
+        async function addMoreVehicles() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在添加车辆...</p>';
+
+            // 从CSV文件中提取的完整车辆数据（17辆）
+            const allVehicles = [
+                {
+                    "id": "VEH001",
+                    "code": "765772",
+                    "model": "Model3",
+                    "color": "Model3白色黑色黑色 5座",
+                    "plateNumber": "京ACV6773",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LRW3E7EKXSC495307",
+                    "series": "特斯拉",
+                    "vehicle": "Model3",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/4A90E2/ffffff?text=Model3"
+                },
+                {
+                    "id": "VEH002",
+                    "code": "763702",
+                    "model": "W02 Ultra",
+                    "color": "小象灰拼黑外/黑深灰灰内/ULTRA/21寸全涂轮",
+                    "plateNumber": "",
+                    "location": "常州市",
+                    "city": "常州市",
+                    "vin": "HLX13B176S1200049",
+                    "series": "W02",
+                    "vehicle": "W02 Ultra",
+                    "stage": "PPV",
+                    "image": "https://via.placeholder.com/400x300/6A4C93/ffffff?text=W02"
+                },
+                {
+                    "id": "VEH003",
+                    "code": "763520",
+                    "model": "MEGA MAX",
+                    "color": "科技绿/爱马仕橙/HRE/7座",
+                    "plateNumber": "",
+                    "location": "",
+                    "city": "北京市",
+                    "vin": "HLX14B170S1996293",
+                    "series": "理想MEGA",
+                    "vehicle": "MEGA MAX",
+                    "stage": "EP2",
+                    "image": "https://via.placeholder.com/400x300/9B59B6/ffffff?text=MEGA+MAX"
+                },
+                {
+                    "id": "VEH004",
+                    "code": "597940",
+                    "model": "L9-2024款 Ultra",
+                    "color": "银色金属漆黑白双色内饰",
+                    "plateNumber": "京AFD3265",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "HLX33B122R0040653",
+                    "series": "理想L9",
+                    "vehicle": "L9-2024款 Ultra",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/8B4789/ffffff?text=L9+Ultra"
+                },
+                {
+                    "id": "VEH005",
+                    "code": "521763",
+                    "model": "L7-2024款 Ultra",
+                    "color": "银色金属漆黑白双色内饰",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "HLX33B123R1616504",
+                    "series": "理想L7",
+                    "vehicle": "L7-2024款 Ultra",
+                    "stage": "P",
+                    "image": "https://via.placeholder.com/400x300/6A4C93/ffffff?text=L7+Ultra"
+                },
+                {
+                    "id": "VEH006",
+                    "code": "511928",
+                    "model": "MEGA-Ultra",
+                    "color": "银色金属漆白色内饰",
+                    "plateNumber": "琼BD03216",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "HLX14B17XR0000076",
+                    "series": "理想MEGA",
+                    "vehicle": "MEGA-Ultra",
+                    "stage": "P",
+                    "image": "https://via.placeholder.com/400x300/7B2CBF/ffffff?text=MEGA+Ultra"
+                },
+                {
+                    "id": "VEH007",
+                    "code": "509697",
+                    "model": "问界M7",
+                    "color": "黑色黑色白色 5座",
+                    "plateNumber": "京AFM9977",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LM8F7E896RA003696",
+                    "series": "问界",
+                    "vehicle": "问界M7",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/3498DB/ffffff?text=M7"
+                },
+                {
+                    "id": "VEH008",
+                    "code": "498717",
+                    "model": "小鹏G6",
+                    "color": "银色黑色白色 5座",
+                    "plateNumber": "京AC68509",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "L1NNSGHA8PB044391",
+                    "series": "小鹏G6",
+                    "vehicle": "小鹏G6",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/FF6B6B/ffffff?text=XPeng+G6"
+                },
+                {
+                    "id": "VEH009",
+                    "code": "469021",
+                    "model": "L8 Pro",
+                    "color": "黑色",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "HLX33B121P1765281",
+                    "series": "理想L8",
+                    "vehicle": "L8 Pro",
+                    "stage": "PPV1",
+                    "image": "https://via.placeholder.com/400x300/5D3A9B/ffffff?text=L8+Pro"
+                },
+                {
+                    "id": "VEH010",
+                    "code": "469008",
+                    "model": "L7 Ultra",
+                    "color": "黑色",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "HLX33B122P1756105",
+                    "series": "理想L7",
+                    "vehicle": "L7 Ultra",
+                    "stage": "PPV1",
+                    "image": "https://via.placeholder.com/400x300/4A148C/ffffff?text=L7+Ultra"
+                },
+                {
+                    "id": "VEH011",
+                    "code": "400404",
+                    "model": "L7 Ultra",
+                    "color": "银色金属漆黑色运动内饰",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LW433B124P1631738",
+                    "series": "理想L7",
+                    "vehicle": "L7 Ultra",
+                    "stage": "EP2",
+                    "image": "https://via.placeholder.com/400x300/6A1B9A/ffffff?text=L7+Ultra"
+                },
+                {
+                    "id": "VEH012",
+                    "code": "388852",
+                    "model": "L7 Pro",
+                    "color": "灰色金属漆黑橙双色内饰",
+                    "plateNumber": "京AFJ4863",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LW433B12XP1605080",
+                    "series": "理想L7",
+                    "vehicle": "L7 Pro",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/8E44AD/ffffff?text=L7+Pro"
+                },
+                {
+                    "id": "VEH013",
+                    "code": "335496",
+                    "model": "L7-2022款",
+                    "color": "黑橙配色",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LW433B12XN1601155",
+                    "series": "理想L7",
+                    "vehicle": "L7-2022款",
+                    "stage": "PP3",
+                    "image": "https://via.placeholder.com/400x300/9B59B6/ffffff?text=L7+2022"
+                },
+                {
+                    "id": "VEH014",
+                    "code": "294947",
+                    "model": "L8 Max",
+                    "color": "黑灰",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LW433B125N1002874",
+                    "series": "理想L8",
+                    "vehicle": "L8 Max",
+                    "stage": "P1",
+                    "image": "https://via.placeholder.com/400x300/AF69BD/ffffff?text=L8+Max"
+                },
+                {
+                    "id": "VEH015",
+                    "code": "243800",
+                    "model": "L9 Max",
+                    "color": "灰色金属漆橙色皮革内饰",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LW433B126N1000597",
+                    "series": "理想L9",
+                    "vehicle": "L9 Max",
+                    "stage": "P",
+                    "image": "https://via.placeholder.com/400x300/BA68C8/ffffff?text=L9+Max"
+                },
+                {
+                    "id": "VEH016",
+                    "code": "65498",
+                    "model": "ONE-2021款",
+                    "color": "黑色金属漆黑色皮革内饰",
+                    "plateNumber": "",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LW433B110M1005123",
+                    "series": "理想ONE",
+                    "vehicle": "ONE-2021款",
+                    "stage": "PPV1",
+                    "image": "https://via.placeholder.com/400x300/CE93D8/ffffff?text=ONE+2021"
+                },
+                {
+                    "id": "VEH017",
+                    "code": "43548",
+                    "model": "Model 3",
+                    "color": "灰色双色黑色",
+                    "plateNumber": "京AD15829",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LRW3E7EAXLC020104",
+                    "series": "特斯拉",
+                    "vehicle": "Model 3",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/2196F3/ffffff?text=Model+3"
+                }
+            ];
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify({
+                        vehicles: allVehicles,
+                        bookings: []
+                    })
+                });
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h3>✅ 成功添加车辆！</h3>
+                            <p>现在 JSONBin 中有 <strong>${allVehicles.length} 辆车</strong></p>
+                            <p>包括：特斯拉Model3、W02 Ultra、理想MEGA/L9/L7/L8/ONE、问界M7、小鹏G6</p>
+                            <p><strong>现在刷新 index.html 查看所有车辆！</strong></p>
+                        </div>`;
+                } else {
+                    result.innerHTML = '<div class="error">❌ 上传失败</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ 错误: ${error.message}</div>`;
+            }
+        }
+
+        async function resetToThree() {
+            if (!confirm('确定要重置为3辆车吗？这将删除所有其他车辆数据！')) {
+                return;
+            }
+
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在重置...</p>';
+
+            const threeVehicles = {
+                "vehicles": [
+                    {
+                        "id": "VEH001",
+                        "code": "765772",
+                        "model": "Model3",
+                        "color": "Model3白色黑色黑色 5座",
+                        "plateNumber": "京ACV6773",
+                        "location": "北京市",
+                        "city": "北京市",
+                        "vin": "LRW3E7EKXSC495307",
+                        "series": "特斯拉",
+                        "vehicle": "Model3",
+                        "stage": "SOP",
+                        "image": "https://via.placeholder.com/400x300/4A90E2/ffffff?text=Model3"
+                    },
+                    {
+                        "id": "VEH002",
+                        "code": "763702",
+                        "model": "W02 Ultra",
+                        "color": "小象灰拼黑外/黑深灰灰内/ULTRA/21寸全涂轮",
+                        "plateNumber": "",
+                        "location": "常州市",
+                        "city": "常州市",
+                        "vin": "HLX13B176S1200049",
+                        "series": "W02",
+                        "vehicle": "W02 Ultra",
+                        "stage": "PPV",
+                        "image": "https://via.placeholder.com/400x300/6A4C93/ffffff?text=W02"
+                    },
+                    {
+                        "id": "VEH003",
+                        "code": "763520",
+                        "model": "MEGA MAX",
+                        "color": "科技绿/爱马仕橙/HRE/7座",
+                        "plateNumber": "",
+                        "location": "",
+                        "city": "北京市",
+                        "vin": "HLX14B170S1996293",
+                        "series": "理想MEGA",
+                        "vehicle": "MEGA MAX",
+                        "stage": "EP2",
+                        "image": "https://via.placeholder.com/400x300/9B59B6/ffffff?text=MEGA+MAX"
+                    }
+                ],
+                "bookings": []
+            };
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify(threeVehicles)
+                });
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h3>✅ 已重置为3辆车</h3>
+                            <p>Model3、W02 Ultra、MEGA MAX</p>
+                        </div>`;
+                } else {
+                    result.innerHTML = '<div class="error">❌ 重置失败</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ 错误: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

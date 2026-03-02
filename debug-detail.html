@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>详情页数据调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #1976d2; }
+        .debug-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .debug-box h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .field {
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 4px solid #4CAF50;
+            background: #f9f9f9;
+        }
+        .field.empty {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .field strong {
+            display: inline-block;
+            width: 150px;
+            color: #666;
+        }
+        .field-value {
+            color: #333;
+            font-weight: 600;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 详情页数据调试</h1>
+    <p>URL参数: <span id="urlParams"></span></p>
+
+    <div id="loading" class="loading">正在加载数据...</div>
+    <div id="result"></div>
+
+    <script src="js/data-jsonbin.js"></script>
+
+    <script>
+        // 获取URL参数
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        async function debugVehicleData() {
+            const vehicleId = getUrlParameter('id');
+            document.getElementById('urlParams').textContent = `id=${vehicleId}`;
+
+            if (!vehicleId) {
+                document.getElementById('loading').innerHTML = '<p style="color:red;">❌ URL中没有id参数！请从index.html点击车辆进入</p>';
+                return;
+            }
+
+            try {
+                // 获取车辆数据
+                const vehicle = await dataManager.getVehicleById(vehicleId);
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (!vehicle) {
+                    document.getElementById('result').innerHTML = '<p style="color:red;">❌ 未找到该车辆！</p>';
+                    return;
+                }
+
+                // 显示完整的vehicle对象
+                let html = `
+                    <div class="debug-box">
+                        <h3>完整的 Vehicle 对象（JSON格式）</h3>
+                        <pre>${JSON.stringify(vehicle, null, 2)}</pre>
+                    </div>
+
+                    <div class="debug-box">
+                        <h3>各字段读取情况</h3>
+                `;
+
+                // 检查每个字段
+                const fields = [
+                    { label: 'ID', key: 'id', value: vehicle.id },
+                    { label: '车辆编码 (code)', key: 'code', value: vehicle.code },
+                    { label: '车辆型号 (model)', key: 'model', value: vehicle.model },
+                    { label: '车辆 (vehicle)', key: 'vehicle', value: vehicle.vehicle },
+                    { label: 'VIN码 (vin)', key: 'vin', value: vehicle.vin },
+                    { label: '位置 (location)', key: 'location', value: vehicle.location },
+                    { label: '城市 (city)', key: 'city', value: vehicle.city },
+                    { label: '阶段 (stage)', key: 'stage', value: vehicle.stage },
+                    { label: '车系 (series)', key: 'series', value: vehicle.series },
+                    { label: '颜色 (color)', key: 'color', value: vehicle.color },
+                    { label: '车牌号 (plateNumber)', key: 'plateNumber', value: vehicle.plateNumber },
+                    { label: '钥匙位置 (keyLocation)', key: 'keyLocation', value: vehicle.keyLocation },
+                    { label: '图片 (image)', key: 'image', value: vehicle.image ? '有' : '无' }
+                ];
+
+                fields.forEach(field => {
+                    const isEmpty = !field.value || field.value === 'undefined' || field.value === 'null';
+                    const cssClass = isEmpty ? 'field empty' : 'field';
+                    const displayValue = field.value || '❌ 空值';
+                    const icon = isEmpty ? '❌' : '✅';
+
+                    html += `
+                        <div class="${cssClass}">
+                            <strong>${icon} ${field.label}:</strong>
+                            <span class="field-value">${displayValue}</span>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+
+                // 显示详情页会如何渲染这些数据
+                html += `
+                    <div class="debug-box">
+                        <h3>详情页会显示的值（模拟）</h3>
+                        <div class="field">
+                            <strong>车辆编码:</strong>
+                            <span class="field-value">${vehicle.code || '-'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>VIN码:</strong>
+                            <span class="field-value">${vehicle.vin || '-'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>车辆:</strong>
+                            <span class="field-value">${vehicle.vehicle || '-'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>车辆位置:</strong>
+                            <span class="field-value">${vehicle.location || vehicle.city || '-'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>车辆阶段:</strong>
+                            <span class="field-value">${vehicle.stage || '-'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>颜色:</strong>
+                            <span class="field-value">${vehicle.color || '-'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>车牌号:</strong>
+                            <span class="field-value">${vehicle.plateNumber || '暂无车牌'}</span>
+                        </div>
+                        <div class="field">
+                            <strong>钥匙位置:</strong>
+                            <span class="field-value">${vehicle.keyLocation || '未设置'}</span>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('result').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').innerHTML = `
+                    <div class="debug-box" style="background:#ffebee;">
+                        <h3 style="color:#c62828;">❌ 错误</h3>
+                        <p><strong>错误信息:</strong> ${error.message}</p>
+                        <p><strong>错误堆栈:</strong></p>
+                        <pre>${error.stack}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载后执行
+        document.addEventListener('DOMContentLoaded', debugVehicleData);
+    </script>
+</body>
+</html>

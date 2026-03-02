@@ -2,9 +2,28 @@
 
 // 页面初始化
 document.addEventListener('DOMContentLoaded', function() {
+    // 检查管理员权限
+    if (!userManager.isAdmin()) {
+        showAccessDenied();
+        return;
+    }
+
     loadStatistics();
     bindEventListeners();
 });
+
+// 显示无权限提示
+function showAccessDenied() {
+    const container = document.querySelector('.container');
+    container.innerHTML = `
+        <div style="text-align: center; padding: 100px 20px;">
+            <div style="font-size: 80px; margin-bottom: 20px;">🔒</div>
+            <h2 style="color: #666; margin-bottom: 15px;">访问受限</h2>
+            <p style="color: #999; font-size: 16px;">使用统计功能仅对管理员开放</p>
+            <a href="index.html" class="view-detail-btn" style="max-width: 200px; margin: 30px auto; display: block; text-decoration: none;">返回首页</a>
+        </div>
+    `;
+}
 
 // 绑定事件监听器
 function bindEventListeners() {
@@ -128,98 +147,202 @@ function calculateStatistics(vehicles, bookings) {
 
 // 渲染车辆统计列表
 function renderVehicleStatistics(statistics) {
-    const statisticsList = document.getElementById('statisticsList');
     const emptyState = document.getElementById('emptyState');
 
     // 检查是否有使用数据
     const hasUsage = statistics.some(stat => stat.totalUsages > 0);
 
     if (!hasUsage) {
-        statisticsList.classList.add('hidden');
         emptyState.classList.remove('hidden');
         return;
     }
 
-    statisticsList.classList.remove('hidden');
     emptyState.classList.add('hidden');
 
     // 按使用次数降序排序
     statistics.sort((a, b) => b.totalUsages - a.totalUsages);
 
-    // 渲染统计卡片
-    statisticsList.innerHTML = statistics.map(stat => {
-        const hasData = stat.totalUsages > 0;
-        const vehicle = stat.vehicle;
+    // 只渲染月度使用率分析表
+    renderMonthlyUtilizationTable(statistics);
+}
 
-        // 利用率颜色
-        let utilizationColor = '#999';
-        if (stat.utilization >= 50) utilizationColor = '#50C878'; // 绿色 - 高利用率
-        else if (stat.utilization >= 20) utilizationColor = '#FFA500'; // 橙色 - 中等利用率
-        else if (stat.utilization > 0) utilizationColor = '#E94B3C'; // 红色 - 低利用率
+// 渲染月度使用率分析表
+function renderMonthlyUtilizationTable(statistics) {
+    const monthlyContainer = document.getElementById('monthlyUtilizationTable');
+    if (!monthlyContainer) return;
 
-        return `
-            <div class="stat-vehicle-card ${!hasData ? 'no-data' : ''}">
-                <div class="stat-vehicle-header">
-                    <div class="stat-vehicle-info">
-                        <img src="${vehicle.image || 'images/default.jpg'}" alt="${vehicle.model || vehicle.vehicle}" class="stat-vehicle-image"
-                             onerror="this.src='images/default.jpg'" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 12px;">
-                        <div>
-                            <h3 class="stat-vehicle-model">${vehicle.model || vehicle.vehicle}</h3>
-                            <p class="stat-vehicle-details" style="color: #666; font-size: 13px; margin-top: 3px;">
-                                ${vehicle.city || '-'} · ${vehicle.code || '-'}
-                            </p>
-                        </div>
-                    </div>
-                    ${hasData ? '<span class="stat-badge-active" style="background: #50C878; color: white; padding: 4px 12px; border-radius: 12px; font-size: 13px;">已使用</span>' : '<span class="stat-badge-inactive" style="background: #ddd; color: #666; padding: 4px 12px; border-radius: 12px; font-size: 13px;">未使用</span>'}
-                </div>
+    // 按利用率降序排序
+    const sortedStats = [...statistics].sort((a, b) => b.utilization - a.utilization);
 
-                ${hasData ? `
-                <div class="stat-vehicle-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 15px 0;">
-                    <div class="stat-metric" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div class="metric-icon" style="font-size: 24px; margin-bottom: 5px;">📈</div>
-                        <div class="metric-value" style="font-size: 20px; font-weight: bold; color: #333;">${stat.totalUsages}</div>
-                        <div class="metric-label" style="font-size: 12px; color: #666; margin-top: 3px;">使用次数</div>
-                    </div>
-                    <div class="stat-metric" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div class="metric-icon" style="font-size: 24px; margin-bottom: 5px;">⏰</div>
-                        <div class="metric-value" style="font-size: 20px; font-weight: bold; color: #333;">${stat.totalHours.toFixed(1)}</div>
-                        <div class="metric-label" style="font-size: 12px; color: #666; margin-top: 3px;">总时长(小时)</div>
-                    </div>
-                    <div class="stat-metric" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div class="metric-icon" style="font-size: 24px; margin-bottom: 5px;">⌀</div>
-                        <div class="metric-value" style="font-size: 20px; font-weight: bold; color: #333;">${stat.avgHoursPerUse}</div>
-                        <div class="metric-label" style="font-size: 12px; color: #666; margin-top: 3px;">平均时长(小时)</div>
-                    </div>
-                    <div class="stat-metric" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div class="metric-icon" style="font-size: 24px; margin-bottom: 5px;">📊</div>
-                        <div class="metric-value" style="font-size: 20px; font-weight: bold; color: ${utilizationColor};">${stat.utilization}%</div>
-                        <div class="metric-label" style="font-size: 12px; color: #666; margin-top: 3px;">利用率(30天)</div>
-                    </div>
-                    <div class="stat-metric" style="background: #f8f9fa; padding: 12px; border-radius: 8px; text-align: center;">
-                        <div class="metric-icon" style="font-size: 24px; margin-bottom: 5px;">👥</div>
-                        <div class="metric-value" style="font-size: 20px; font-weight: bold; color: #333;">${stat.users.length}</div>
-                        <div class="metric-label" style="font-size: 12px; color: #666; margin-top: 3px;">使用人数</div>
-                    </div>
-                </div>
+    const tableHTML = `
+        <table class="monthly-table">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>车辆名称</th>
+                    <th>30天利用率</th>
+                    <th>使用次数</th>
+                    <th>总时长(小时)</th>
+                    <th>利用率评级</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sortedStats.map((stat, index) => {
+                    const vehicle = stat.vehicle;
+                    const hasData = stat.totalUsages > 0;
 
-                <div class="stat-vehicle-details-section" style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                    <div class="stat-detail-row" style="display: flex; justify-content: space-between; padding: 6px 0;">
-                        <span class="stat-detail-label" style="color: #666; font-size: 13px;">最常使用:</span>
-                        <span class="stat-detail-value" style="color: #333; font-weight: 500; font-size: 13px;">${stat.topUser}</span>
-                    </div>
-                    <div class="stat-detail-row" style="display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid #e0e0e0;">
-                        <span class="stat-detail-label" style="color: #666; font-size: 13px;">最后使用:</span>
-                        <span class="stat-detail-value" style="color: #333; font-weight: 500; font-size: 13px;">${formatDateTime(stat.lastUsedTime)}</span>
-                    </div>
-                </div>
-                ` : `
-                <div class="stat-no-data" style="text-align: center; padding: 30px; color: #999;">
-                    <p>该车辆还未被使用过</p>
-                </div>
-                `}
-            </div>
+                    // 利用率评级
+                    let rating = '未使用';
+                    let ratingClass = 'rating-none';
+                    if (stat.utilization >= 50) {
+                        rating = '高';
+                        ratingClass = 'rating-high';
+                    } else if (stat.utilization >= 20) {
+                        rating = '中';
+                        ratingClass = 'rating-medium';
+                    } else if (stat.utilization > 0) {
+                        rating = '低';
+                        ratingClass = 'rating-low';
+                    }
+
+                    // 利用率柱状图宽度
+                    const barWidth = Math.min(stat.utilization, 100);
+
+                    return `
+                        <tr class="${!hasData ? 'no-usage-row' : ''}" data-vehicle-id="${vehicle.id}">
+                            <td class="rank-cell">${index + 1}</td>
+                            <td class="vehicle-name-cell">
+                                <div class="vehicle-info-inline">
+                                    <img src="${vehicle.image || 'images/default.jpg'}"
+                                         alt="${vehicle.model || vehicle.vehicle}"
+                                         class="vehicle-thumb"
+                                         onerror="this.onerror=null; this.style.display='none';">
+                                    <span>${vehicle.model || vehicle.vehicle}</span>
+                                </div>
+                            </td>
+                            <td class="utilization-bar-cell">
+                                <div class="utilization-bar-container">
+                                    <div class="utilization-bar ${ratingClass}" style="width: ${barWidth}%"></div>
+                                    <span class="utilization-text">${hasData ? stat.utilization + '%' : '0%'}</span>
+                                </div>
+                            </td>
+                            <td class="number-cell">${hasData ? stat.totalUsages : '0'}</td>
+                            <td class="number-cell">${hasData ? stat.totalHours.toFixed(1) : '0'}</td>
+                            <td class="rating-cell">
+                                <span class="rating-badge ${ratingClass}">${rating}</span>
+                            </td>
+                            <td class="action-cell">
+                                ${hasData ? `<button class="btn-view-detail" onclick="toggleVehicleDetail('${vehicle.id}')">
+                                    <span class="detail-icon">▼</span> 查看详情
+                                </button>` : '-'}
+                            </td>
+                        </tr>
+                        <tr class="detail-row" id="detail-${vehicle.id}" style="display: none;">
+                            <td colspan="7">
+                                <div class="detail-content">
+                                    <div class="detail-loading">加载中...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    monthlyContainer.innerHTML = tableHTML;
+}
+
+// 切换车辆详情显示
+async function toggleVehicleDetail(vehicleId) {
+    const detailRow = document.getElementById(`detail-${vehicleId}`);
+    const detailContent = detailRow.querySelector('.detail-content');
+    const mainRow = document.querySelector(`tr[data-vehicle-id="${vehicleId}"]`);
+    const button = mainRow.querySelector('.btn-view-detail');
+    const icon = button.querySelector('.detail-icon');
+
+    // 如果已经展开，则收起
+    if (detailRow.style.display !== 'none') {
+        detailRow.style.display = 'none';
+        icon.textContent = '▼';
+        button.classList.remove('expanded');
+        return;
+    }
+
+    // 展开并加载数据
+    detailRow.style.display = 'table-row';
+    icon.textContent = '▲';
+    button.classList.add('expanded');
+
+    // 如果已经加载过数据，直接显示
+    if (detailContent.dataset.loaded === 'true') {
+        return;
+    }
+
+    // 加载历史数据
+    try {
+        const bookings = await dataManager.getAllBookings();
+        const vehicleBookings = bookings.filter(b => b.vehicleId === vehicleId);
+
+        if (vehicleBookings.length === 0) {
+            detailContent.innerHTML = '<div class="no-history">该车辆暂无使用历史</div>';
+            detailContent.dataset.loaded = 'true';
+            return;
+        }
+
+        // 按开始时间降序排序（最新的在前）
+        vehicleBookings.sort((a, b) => new Date(b[FIELD_NAMES.startTime]) - new Date(a[FIELD_NAMES.startTime]));
+
+        // 渲染历史记录表格
+        const historyHTML = `
+            <h4 class="detail-title">历史使用记录（共 ${vehicleBookings.length} 次）</h4>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>使用人</th>
+                        <th>申请原因</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                        <th>使用时长</th>
+                        <th>状态</th>
+                        <th>还车时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${vehicleBookings.map(booking => {
+                        const startTime = new Date(booking[FIELD_NAMES.startTime]);
+                        const endTime = new Date(booking[FIELD_NAMES.endTime]);
+                        const duration = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(1);
+                        const isReturned = booking.returned;
+
+                        return `
+                            <tr class="${isReturned ? 'history-returned' : 'history-active'}">
+                                <td>${booking[FIELD_NAMES.person]}</td>
+                                <td class="history-reason">${booking[FIELD_NAMES.reason]}</td>
+                                <td>${formatDateTime(booking[FIELD_NAMES.startTime])}</td>
+                                <td>${formatDateTime(booking[FIELD_NAMES.endTime])}</td>
+                                <td class="number-cell">${duration}小时</td>
+                                <td>
+                                    <span class="status-badge ${isReturned ? 'status-returned' : 'status-active'}">
+                                        ${isReturned ? '已还车' : '使用中'}
+                                    </span>
+                                </td>
+                                <td>${isReturned ? formatDateTime(booking.returnedAt) : '-'}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
         `;
-    }).join('');
+
+        detailContent.innerHTML = historyHTML;
+        detailContent.dataset.loaded = 'true';
+
+    } catch (error) {
+        console.error('加载历史记录失败:', error);
+        detailContent.innerHTML = '<div class="error-message">加载失败，请重试</div>';
+    }
 }
 
 // 显示我的预定

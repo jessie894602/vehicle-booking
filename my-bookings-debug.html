@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的预定调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        h1 { color: #333; margin-top: 0; }
+        .section { margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; }
+        .info { color: #666; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #4A90E2; color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .will-show { background: #d4edda; }
+        .wont-show { background: #fff3cd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 我的预定 - 调试版本</h1>
+
+        <div class="section">
+            <h2>基本信息</h2>
+            <p id="savedName">保存的姓名: 加载中...</p>
+            <p id="totalBookings">总预定记录数: 加载中...</p>
+        </div>
+
+        <div class="section">
+            <h2>筛选结果</h2>
+            <p id="matchCount">匹配的未还车记录数: 计算中...</p>
+        </div>
+
+        <div class="section">
+            <h2>所有预定记录（详细）</h2>
+            <table id="recordsTable">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>车辆ID</th>
+                        <th>申请人</th>
+                        <th>未还车</th>
+                        <th>姓名匹配</th>
+                        <th>是否显示</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody"></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>最终显示（我的预定）</h2>
+            <table id="finalTable">
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>车辆</th>
+                        <th>申请原因</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                    </tr>
+                </thead>
+                <tbody id="finalBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/data-jsonbin.js"></script>
+    <script>
+        const savedName = localStorage.getItem('feishu_user_name');
+
+        document.getElementById('savedName').innerHTML = `
+            <strong>保存的姓名:</strong> "${savedName}" (长度: ${savedName ? savedName.length : 0})
+        `;
+
+        // 显示所有字符的Unicode编码
+        if (savedName) {
+            document.getElementById('savedName').innerHTML += `<br>
+            <strong>字符编码:</strong> ${Array.from(savedName).map(c =>
+                `"${c}" = U+${c.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`
+            ).join(', ')}`;
+        }
+
+        dataManager.getAllBookings().then(bookings => {
+            document.getElementById('totalBookings').textContent = `总预定记录数: ${bookings.length}`;
+
+            // 筛选逻辑（和"我的预定"页面一样）
+            const myBookings = bookings.filter(b => b.person === savedName && !b.returned);
+
+            document.getElementById('matchCount').textContent = `
+                匹配的未还车记录数: <strong>${myBookings.length}</strong>
+            `;
+
+            // 分析每条记录
+            let html = '';
+            bookings.forEach((booking, i) => {
+                const person = booking.person || '';
+                const isReturned = booking.returned === true;
+                const nameMatch = person === savedName;
+                const shouldShow = nameMatch && !isReturned;
+
+                const rowClass = shouldShow ? 'will-show' : (nameMatch && !isReturned ? '' : 'wont-show');
+
+                html += `<tr class="${rowClass}">`;
+                html += `<td>${i + 1}</td>`;
+                html += `<td>${booking.vehicleId}</td>`;
+                html += `<td>"${person}"</td>`;
+                html += `<td>${!isReturned ? '是' : '否'}</td>`;
+                html += `<td>${nameMatch ? '✅' : '❌'}</td>`;
+                html += `<td>${shouldShow ? '✅ 会显示' : '❌ 不会显示'}</td>`;
+                html += '</tr>';
+            });
+
+            document.getElementById('recordsBody').innerHTML = html;
+
+            // 显示最终筛选结果
+            dataManager.getAllVehicles().then(vehicles => {
+                html = '';
+                myBookings.forEach((booking, index) => {
+                    const vehicle = vehicles.find(v => v.id === booking.vehicleId);
+                    const vehicleName = vehicle ? (vehicle.model || vehicle.vehicle) : '未知车辆';
+
+                    html += '<tr>';
+                    html += `<td>${index + 1}</td>`;
+                    html += `<td>${vehicleName}</td>`;
+                    html += `<td>${booking.reason}</td>`;
+                    html += `<td>${formatDateTime(booking.startTime)}</td>`;
+                    html += `<td>${formatDateTime(booking.endTime)}</td>`;
+                    html += '</tr>';
+                });
+
+                document.getElementById('finalBody').innerHTML = html || '<tr><td colspan="5">没有匹配的记录</td></tr>';
+            });
+        });
+
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}/${month}/${day} ${hours}:${minutes}`;
+        }
+    </script>
+</body>
+</html>

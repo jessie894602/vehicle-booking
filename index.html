@@ -14,8 +14,8 @@
             <div class="header-content">
                 <a href="index.html" class="logo">车辆预定系统</a>
                 <nav class="nav-links">
-                    <a href="index.html" class="nav-link">车辆列表</a>
-                    <a href="#" class="nav-link" id="myBookingsLink">我的预定</a>
+                    <a href="index.html" class="nav-link">预定车辆</a>
+                    <a href="my-bookings.html" class="nav-link">还车</a>
                     <a href="statistics.html" class="nav-link">使用统计</a>
                 </nav>
             </div>
@@ -34,7 +34,10 @@
                 </div>
             </div>
 
-            <h1 class="page-title">可预定车辆 <span class="page-subtitle">（点击卡片可预约）</span></h1>
+            <h1 class="page-title">可预定车辆 <span class="page-subtitle">（查看以后预定情况，可点击时间进行预定）</span></h1>
+
+            <!-- 时间表头（只显示一次） -->
+            <div id="scheduleHeader" class="schedule-header-fixed hidden"></div>
 
             <!-- 车辆列表加载状态 -->
             <div id="loadingState" class="loading">
@@ -61,7 +64,14 @@
     </footer>
 
     <!-- 引入JavaScript文件 -->
+    <script src="js/user-manager.js?v=12"></script>
     <script src="js/data-jsonbin.js?v=11"></script>
     <script src="js/app.js?v=11"></script>
+    <script>
+        // 初始化用户系统
+        document.addEventListener('DOMContentLoaded', async function() {
+            await userManager.init();
+        });
+    </script>
 </body>
 </html>

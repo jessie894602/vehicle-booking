@@ -29,6 +29,7 @@ async function renderVehiclesList() {
     const loadingState = document.getElementById('loadingState');
     const vehiclesGrid = document.getElementById('vehiclesGrid');
     const emptyState = document.getElementById('emptyState');
+    const scheduleHeader = document.getElementById('scheduleHeader');
 
     try {
         // 获取所有车辆
@@ -41,6 +42,10 @@ async function renderVehiclesList() {
             // 显示空状态
             emptyState.classList.remove('hidden');
         } else {
+            // 生成并显示时间表头（只显示一次）
+            renderScheduleHeader(scheduleHeader);
+            scheduleHeader.classList.remove('hidden');
+
             // 显示车辆网格
             vehiclesGrid.classList.remove('hidden');
 
@@ -52,6 +57,11 @@ async function renderVehiclesList() {
                 const card = await createVehicleCard(vehicle);
                 vehiclesGrid.appendChild(card);
             }
+
+            // 所有车辆渲染完成后，设置滚动同步
+            setTimeout(() => {
+                setupScrollSync();
+            }, 100);
         }
     } catch (error) {
         console.error('加载车辆列表失败:', error);
@@ -63,53 +73,273 @@ async function renderVehiclesList() {
     }
 }
 
-// 创建车辆卡片元素
-async function createVehicleCard(vehicle) {
-    const card = document.createElement('div');
-    card.className = 'vehicle-card';
-    card.onclick = () => navigateToDetail(vehicle.id);
+// 渲染时间表头（只渲染一次）
+function renderScheduleHeader(headerElement) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // 获取车辆使用状态
-    const vehicleStatus = await dataManager.getVehicleStatus(vehicle.id);
-    const statusClass = vehicleStatus.status === 'in-use' ? 'vehicle-badge-busy' : 'vehicle-badge-free';
-    const statusText = vehicleStatus.status === 'in-use' ? '使用中' : '空闲';
+    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
-    card.innerHTML = `
-        <div class="vehicle-booking-badge ${statusClass}">${statusText}</div>
-        <div class="vehicle-info">
-            <div class="vehicle-details">
-                <div class="detail-item">
-                    <span class="detail-label">车辆:</span>
-                    <span class="detail-value">${vehicle.vehicle || vehicle.model || '-'}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">位置:</span>
-                    <span class="detail-value">${vehicle.location || vehicle.city || '-'}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">颜色:</span>
-                    <span class="detail-value">${vehicle.color || '-'}</span>
-                </div>
-                ${vehicle.plateNumber ? `
-                <div class="detail-item">
-                    <span class="detail-label">车牌:</span>
-                    <span class="detail-value vehicle-plate">${vehicle.plateNumber}</span>
-                </div>
-                ` : ''}
-                <div class="detail-item">
-                    <span class="detail-label">阶段:</span>
-                    <span class="detail-value">${vehicle.stage || '-'}</span>
-                </div>
+    let headerHTML = '<div class="schedule-header-row">';
+    headerHTML += '<div class="vehicle-name-placeholder">车辆</div>';
+    headerHTML += '<div class="schedule-header-scroll-wrapper" id="headerScrollWrapper">';
+    headerHTML += '<div class="schedule-days-container">';
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const dayLabel = i === 0 ? '今天' : dayNames[date.getDay()];
+        const dateLabel = `${date.getMonth() + 1}/${date.getDate()}`;
+
+        headerHTML += `
+            <div class="schedule-day-column-header">
+                <div class="day-label">${dayLabel}</div>
+                <div class="date-label">${dateLabel}</div>
             </div>
+        `;
+    }
+
+    headerHTML += '</div>';
+    headerHTML += '</div>';
+    headerHTML += '<div class="action-placeholder">操作</div>';
+    headerHTML += '</div>';
+
+    headerElement.innerHTML = headerHTML;
+}
+
+// 创建车辆卡片元素（新版：横向布局+7天预定进度条，无日期标题）
+async function createVehicleCard(vehicle) {
+    const row = document.createElement('div');
+    row.className = 'vehicle-row';
+
+    // 获取未来7天的预定情况
+    const weekSchedule = await getWeekSchedule(vehicle.id);
+
+    row.innerHTML = `
+        <div class="vehicle-basic-info">
+            <div class="vehicle-model-name">${vehicle.vehicle || vehicle.model || '-'}</div>
+        </div>
+        <div class="vehicle-schedule">
+            <div class="schedule-days-container">
+                ${weekSchedule.map(day => `
+                    <div class="schedule-day-column-simple">
+                        <div class="schedule-hours">
+                            ${day.hours.map(hour => `
+                                <div class="schedule-hour-cell ${hour.status}"
+                                     title="${hour.tooltip}"
+                                     data-status="${hour.status}"
+                                     data-start="${hour.startTime}"
+                                     data-end="${hour.endTime}"
+                                     data-vehicle-id="${vehicle.id}">${hour.hour}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        <div class="vehicle-action">
+            <button class="btn-book" data-vehicle-id="${vehicle.id}">预定</button>
         </div>
     `;
 
-    return card;
+    // 为所有可用的小时格子添加点击事件
+    setTimeout(() => {
+        const cells = row.querySelectorAll('.schedule-hour-cell.available');
+        cells.forEach(cell => {
+            cell.style.cursor = 'pointer';
+            cell.addEventListener('click', function() {
+                toggleCellSelection(this, row);
+            });
+        });
+
+        // 为预定按钮添加点击事件
+        const bookBtn = row.querySelector('.btn-book');
+        bookBtn.addEventListener('click', function() {
+            const vehicleId = this.getAttribute('data-vehicle-id');
+            handleBookingWithSelection(vehicleId, row);
+        });
+    }, 0);
+
+    return row;
+}
+
+// 切换时间格子的选中状态
+function toggleCellSelection(cell, row) {
+    const isSelected = cell.classList.contains('selected');
+    const allCells = Array.from(row.querySelectorAll('.schedule-hour-cell.available'));
+    const selectedCells = Array.from(row.querySelectorAll('.schedule-hour-cell.selected'));
+
+    if (isSelected) {
+        // 取消选中
+        cell.classList.remove('selected');
+    } else {
+        // 选中格子
+        if (selectedCells.length === 0) {
+            // 第一次选择，直接选中
+            cell.classList.add('selected');
+        } else {
+            // 检查是否可以形成连续区间
+            const currentIndex = allCells.indexOf(cell);
+            const selectedIndices = selectedCells.map(c => allCells.indexOf(c));
+            const minSelected = Math.min(...selectedIndices);
+            const maxSelected = Math.max(...selectedIndices);
+
+            if (currentIndex === minSelected - 1 || currentIndex === maxSelected + 1) {
+                // 在选中区间的两端，可以扩展
+                cell.classList.add('selected');
+            } else if (currentIndex > minSelected && currentIndex < maxSelected) {
+                // 在选中区间内部，可以选中
+                cell.classList.add('selected');
+            } else {
+                // 不连续，清除之前的选择，重新开始
+                selectedCells.forEach(c => c.classList.remove('selected'));
+                cell.classList.add('selected');
+            }
+        }
+    }
+}
+
+// 处理带选中时间的预定
+function handleBookingWithSelection(vehicleId, row) {
+    const selectedCells = Array.from(row.querySelectorAll('.schedule-hour-cell.selected'));
+
+    if (selectedCells.length === 0) {
+        // 没有选中时间，直接跳转到预定页面
+        navigateToDetail(vehicleId);
+    } else {
+        // 获取选中的时间范围
+        const startTimes = selectedCells.map(cell => new Date(cell.getAttribute('data-start')));
+        const endTimes = selectedCells.map(cell => new Date(cell.getAttribute('data-end')));
+
+        const startTime = new Date(Math.min(...startTimes)).toISOString();
+        const endTime = new Date(Math.max(...endTimes)).toISOString();
+
+        // 清除选中状态
+        selectedCells.forEach(cell => cell.classList.remove('selected'));
+
+        // 跳转到预定页面并传递时间
+        navigateToDetailWithTime(vehicleId, startTime, endTime);
+    }
+}
+
+// 设置滚动同步
+function setupScrollSync() {
+    const headerScroll = document.getElementById('headerScrollWrapper');
+    if (!headerScroll) return;
+
+    let isScrolling = false;
+
+    // 监听表头滚动，同步到所有车辆行
+    headerScroll.addEventListener('scroll', function() {
+        if (isScrolling) return;
+        isScrolling = true;
+
+        const scrollLeft = this.scrollLeft;
+        const vehicleSchedules = document.querySelectorAll('.vehicle-schedule');
+
+        vehicleSchedules.forEach(schedule => {
+            schedule.scrollLeft = scrollLeft;
+        });
+
+        requestAnimationFrame(() => {
+            isScrolling = false;
+        });
+    });
+
+    // 监听任意车辆行滚动，同步到表头和其他行
+    const vehicleSchedules = document.querySelectorAll('.vehicle-schedule');
+    vehicleSchedules.forEach(schedule => {
+        schedule.addEventListener('scroll', function() {
+            if (isScrolling) return;
+            isScrolling = true;
+
+            const scrollLeft = this.scrollLeft;
+            headerScroll.scrollLeft = scrollLeft;
+
+            vehicleSchedules.forEach(otherSchedule => {
+                if (otherSchedule !== this) {
+                    otherSchedule.scrollLeft = scrollLeft;
+                }
+            });
+
+            requestAnimationFrame(() => {
+                isScrolling = false;
+            });
+        });
+    });
+}
+
+// 获取未来7天的预定情况（按小时拆分：9:00-18:00）
+async function getWeekSchedule(vehicleId) {
+    const bookings = await dataManager.getBookingsByVehicleId(vehicleId);
+    const schedule = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 工作时间：9:00-18:00，共10个小时
+    const workHours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const dayLabel = i === 0 ? '今天' : dayNames[date.getDay()];
+        const dateLabel = `${date.getMonth() + 1}/${date.getDate()}`;
+
+        // 为每个小时创建格子
+        const hours = workHours.map(hour => {
+            const hourStart = new Date(date);
+            hourStart.setHours(hour, 0, 0, 0);
+            const hourEnd = new Date(date);
+            hourEnd.setHours(hour + 1, 0, 0, 0);
+
+            let status = 'available';
+            let tooltip = `${dateLabel} ${hour}:00-${hour + 1}:00 可预定`;
+
+            // 检查这个小时是否被预定
+            for (const booking of bookings) {
+                if (booking.returned) continue;
+
+                const bookingStart = new Date(booking.startTime);
+                const bookingEnd = new Date(booking.endTime);
+
+                // 判断预定时间是否覆盖这个小时
+                if (bookingStart < hourEnd && bookingEnd > hourStart) {
+                    status = 'booked';
+                    tooltip = `${dateLabel} ${hour}:00-${hour + 1}:00 已预定\n预定人: ${booking.person}`;
+                    break;
+                }
+            }
+
+            return {
+                hour: hour,
+                status: status,
+                tooltip: tooltip,
+                startTime: hourStart.toISOString(),
+                endTime: hourEnd.toISOString()
+            };
+        });
+
+        schedule.push({
+            dayLabel,
+            dateLabel,
+            hours
+        });
+    }
+
+    return schedule;
 }
 
 // 导航到详情页
 function navigateToDetail(vehicleId) {
     window.location.href = `detail.html?id=${vehicleId}`;
+}
+
+// 导航到详情页并预填充时间
+function navigateToDetailWithTime(vehicleId, startTime, endTime) {
+    window.location.href = `detail.html?id=${vehicleId}&startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
 }
 
 // 绑定事件监听器

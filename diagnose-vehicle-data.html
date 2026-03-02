@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>车辆数据诊断</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        h1 { color: #1976d2; }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .vehicle-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .vehicle-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 车辆数据诊断工具</h1>
+    <p>检查 JSONBin 中的车辆数据是否完整</p>
+
+    <button onclick="checkAllVehicles()">查看所有车辆数据</button>
+    <button onclick="checkFirstVehicle()">查看第一辆车详细数据</button>
+
+    <div id="result"></div>
+
+    <script src="js/data-jsonbin.js"></script>
+
+    <script>
+        async function checkAllVehicles() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在获取数据...</p>';
+
+            try {
+                const vehicles = await dataManager.getAllVehicles();
+
+                let html = `<h2>📋 共有 ${vehicles.length} 辆车</h2>`;
+
+                vehicles.forEach((vehicle, index) => {
+                    // 检查哪些字段有值
+                    const fields = {
+                        'id': vehicle.id || '❌ 无',
+                        'code': vehicle.code || '❌ 无',
+                        'model': vehicle.model || '❌ 无',
+                        'vehicle': vehicle.vehicle || '❌ 无',
+                        'vin': vehicle.vin || '❌ 无',
+                        'location': vehicle.location || '❌ 无',
+                        'city': vehicle.city || '❌ 无',
+                        'stage': vehicle.stage || '❌ 无',
+                        'series': vehicle.series || '❌ 无',
+                        'color': vehicle.color || '❌ 无',
+                        'plateNumber': vehicle.plateNumber || '❌ 无',
+                        'keyLocation': vehicle.keyLocation || '❌ 无',
+                        'image': vehicle.image ? '✓ 有' : '❌ 无'
+                    };
+
+                    html += `
+                        <div class="vehicle-card">
+                            <h3>${index + 1}. ${vehicle.model || vehicle.vehicle || vehicle.id}</h3>
+                            <table style="width:100%; font-size:13px;">
+                                <tr><td><strong>ID:</strong></td><td>${fields.id}</td></tr>
+                                <tr><td><strong>车辆编码:</strong></td><td>${fields.code}</td></tr>
+                                <tr><td><strong>车辆型号 (model):</strong></td><td>${fields.model}</td></tr>
+                                <tr><td><strong>车辆 (vehicle):</strong></td><td>${fields.vehicle}</td></tr>
+                                <tr><td><strong>VIN码:</strong></td><td>${fields.vin}</td></tr>
+                                <tr><td><strong>位置 (location):</strong></td><td>${fields.location}</td></tr>
+                                <tr><td><strong>城市 (city):</strong></td><td>${fields.city}</td></tr>
+                                <tr><td><strong>阶段:</strong></td><td>${fields.stage}</td></tr>
+                                <tr><td><strong>车系:</strong></td><td>${fields.series}</td></tr>
+                                <tr><td><strong>颜色:</strong></td><td>${fields.color}</td></tr>
+                                <tr><td><strong>车牌号:</strong></td><td>${fields.plateNumber}</td></tr>
+                                <tr><td><strong>钥匙位置:</strong></td><td>${fields.keyLocation}</td></tr>
+                                <tr><td><strong>图片:</strong></td><td>${fields.image}</td></tr>
+                            </table>
+                        </div>`;
+                });
+
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<p style="color:red;">错误: ${error.message}</p>`;
+            }
+        }
+
+        async function checkFirstVehicle() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在获取数据...</p>';
+
+            try {
+                const vehicles = await dataManager.getAllVehicles();
+                if (vehicles.length === 0) {
+                    result.innerHTML = '<p style="color:red;">没有车辆数据！</p>';
+                    return;
+                }
+
+                const vehicle = vehicles[0];
+
+                result.innerHTML = `
+                    <h2>第一辆车的完整数据：</h2>
+                    <pre>${JSON.stringify(vehicle, null, 2)}</pre>
+                    <h3>字段检查：</h3>
+                    <ul>
+                        <li>vehicle.code = "${vehicle.code}" (${typeof vehicle.code})</li>
+                        <li>vehicle.model = "${vehicle.model}" (${typeof vehicle.model})</li>
+                        <li>vehicle.vehicle = "${vehicle.vehicle}" (${typeof vehicle.vehicle})</li>
+                        <li>vehicle.location = "${vehicle.location}" (${typeof vehicle.location})</li>
+                        <li>vehicle.city = "${vehicle.city}" (${typeof vehicle.city})</li>
+                        <li>vehicle.stage = "${vehicle.stage}" (${typeof vehicle.stage})</li>
+                    </ul>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p style="color:red;">错误: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

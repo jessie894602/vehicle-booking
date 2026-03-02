@@ -29,15 +29,6 @@ async function initializeDetailPage() {
         bookingForm.addEventListener('submit', handleBookingSubmit);
     }
 
-    // 绑定我的预定链接
-    const myBookingsLink = document.getElementById('myBookingsLink');
-    if (myBookingsLink) {
-        myBookingsLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            showMyBookings();
-        });
-    }
-
     // 设置默认时间
     setDefaultDateTime();
 }
@@ -47,38 +38,24 @@ async function autoFillUserName() {
     const personInput = document.getElementById('person');
     if (!personInput) return;
 
-    try {
-        // 检测是否在飞书环境中
-        if (feishuIntegration.isFeishuEnv) {
-            console.log('检测到飞书环境，尝试获取用户信息...');
+    // 获取当前用户姓名
+    const currentUser = userManager.getCurrentUser();
 
-            // 尝试从飞书获取用户信息
-            const userInfo = await feishuIntegration.getUserInfo();
+    if (currentUser) {
+        // 填充当前用户姓名
+        personInput.value = currentUser;
 
-            if (userInfo && userInfo.name) {
-                personInput.value = userInfo.name;
-                personInput.style.backgroundColor = '#e3f2fd';
-                console.log('已自动填充飞书用户姓名:', userInfo.name);
+        // 禁用输入框（不允许修改）
+        personInput.disabled = true;
+        personInput.style.backgroundColor = '#f0f0f0';
+        personInput.style.cursor = 'not-allowed';
 
-                // 添加提示标签
-                addAutoFillLabel(personInput, '已自动获取飞书用户信息');
-                return;
-            }
-        }
+        // 添加提示标签
+        addAutoFillLabel(personInput, `已自动填充当前登录用户：${currentUser}`);
 
-        // 如果不在飞书环境或获取失败，使用本地保存的姓名
-        const savedName = feishuIntegration.getSavedUserInfo();
-        if (savedName) {
-            personInput.value = savedName;
-            personInput.style.backgroundColor = '#fff9c4';
-            console.log('已自动填充上次使用的姓名:', savedName);
-
-            // 添加提示标签
-            addAutoFillLabel(personInput, '已自动填充上次使用的姓名');
-        }
-
-    } catch (error) {
-        console.error('自动填充用户姓名失败:', error);
+        console.log('已自动填充当前用户姓名:', currentUser);
+    } else {
+        console.log('未找到当前用户信息');
     }
 }
 
@@ -167,137 +144,40 @@ async function loadBookingHistory(vehicleId) {
     // 获取该车辆的所有预定记录
     const bookings = await dataManager.getBookingsByVehicleId(vehicleId);
 
-    if (bookings.length === 0) {
-        historyList.innerHTML = '<div class="no-bookings">暂无预定记录</div>';
+    // 只显示未还车的预定记录
+    const activeBookings = bookings.filter(b => !b.returned);
+
+    if (activeBookings.length === 0) {
+        historyList.innerHTML = '<div class="no-bookings">暂无进行中的预定</div>';
     } else {
-        // 按创建时间倒序排列（最新的在前）
-        bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        // 按开始时间排序（最近的在前）
+        activeBookings.sort((a, b) => new Date(a[FIELD_NAMES.startTime]) - new Date(b[FIELD_NAMES.startTime]));
 
-        // 添加控制按钮
-        const controlsHTML = `
-            <div class="history-controls">
-                <button class="btn-clear-returned" onclick="clearReturnedBookings()">清除已还车记录</button>
-                <button class="btn-clear" onclick="clearAllBookingsConfirm()">清除所有记录</button>
-            </div>
-        `;
-
-        const bookingsHTML = bookings.map(booking => {
-            const returnedClass = booking.returned ? 'returned' : '';
-            const returnedBadge = booking.returned
-                ? `<div class="returned-badge">✓ 已还车 ${formatDateTime(booking.returnedAt)}</div>`
-                : '';
-
-            const actionButtons = booking.returned
-                ? `<div class="booking-actions">
-                       <button class="btn-delete" onclick="deleteBooking('${booking.id}')">删除记录</button>
-                   </div>`
-                : `<div class="booking-actions">
-                       <button class="btn-return" onclick="returnVehicle('${booking.id}')">还车</button>
-                       <button class="btn-delete" onclick="deleteBooking('${booking.id}')">删除</button>
-                   </div>`;
+        // 精简显示：一行展示姓名、预定时间、申请原因
+        const bookingsHTML = activeBookings.map(booking => {
+            const startTime = formatDateTime(booking[FIELD_NAMES.startTime]);
+            const endTime = formatDateTime(booking[FIELD_NAMES.endTime]);
 
             return `
-                <div class="booking-history-item ${returnedClass}">
-                    <div class="booking-history-header">
-                        <span class="booking-person">👤 ${booking[FIELD_NAMES.person]}</span>
-                        <span class="booking-date">预定于 ${formatDateTime(booking.createdAt)}</span>
-                    </div>
-                    <div class="booking-time-range">
-                        <span class="time-badge">📅 ${formatDateTime(booking[FIELD_NAMES.startTime])}</span>
-                        <span class="time-arrow">→</span>
-                        <span class="time-badge">📅 ${formatDateTime(booking[FIELD_NAMES.endTime])}</span>
-                    </div>
-                    <div class="booking-reason">
-                        <strong>申请原因：</strong>${booking[FIELD_NAMES.reason]}
-                    </div>
-                    ${returnedBadge}
-                    ${actionButtons}
+                <div class="booking-history-item-simple">
+                    <span class="booking-person-simple">👤 ${booking[FIELD_NAMES.person]}</span>
+                    <span class="booking-time-simple">📅 ${startTime} → ${endTime}</span>
+                    <span class="booking-reason-simple">${booking[FIELD_NAMES.reason]}</span>
                 </div>
             `;
         }).join('');
 
-        historyList.innerHTML = controlsHTML + bookingsHTML;
+        historyList.innerHTML = bookingsHTML;
     }
 
     // 显示历史记录容器
     historyContainer.classList.remove('hidden');
 }
 
-// 还车
-async function returnVehicle(bookingId) {
-    const bookings = await dataManager.getAllBookings();
-    const booking = bookings.find(b => b.id === bookingId);
-
-    if (!booking) {
-        showAlert('未找到预定记录', 'error');
-        return;
-    }
-
-    // 获取当前车辆位置
-    const vehicle = await dataManager.getVehicleById(booking.vehicleId);
-    const currentLocation = vehicle.location || vehicle.city || '';
-    const currentKeyLocation = vehicle.keyLocation || '';
-
-    // 提示用户输入还车位置
-    const newLocation = prompt(`请输入还车位置（当前位置：${currentLocation}）:`, currentLocation);
-
-    // 如果用户点击取消，则不执行还车
-    if (newLocation === null) {
-        return;
-    }
-
-    // 如果用户输入为空，提示错误
-    if (newLocation.trim() === '') {
-        showAlert('还车位置不能为空', 'error');
-        return;
-    }
-
-    // 提示用户输入钥匙位置
-    const newKeyLocation = prompt(`请输入钥匙位置（当前位置：${currentKeyLocation || '未设置'}）:`, currentKeyLocation);
-
-    // 如果用户点击取消，则不执行还车
-    if (newKeyLocation === null) {
-        return;
-    }
-
-    // 如果用户输入为空，提示错误
-    if (newKeyLocation.trim() === '') {
-        showAlert('钥匙位置不能为空', 'error');
-        return;
-    }
-
-    if (confirm(`确认还车吗？\n车辆位置：${newLocation.trim()}\n钥匙位置：${newKeyLocation.trim()}\n\n还车后预定记录将被删除，但会保存到使用统计中。`)) {
-        // 更新车辆位置和钥匙位置
-        const updateSuccess = await dataManager.updateVehicle(booking.vehicleId, {
-            location: newLocation.trim(),
-            keyLocation: newKeyLocation.trim()
-        });
-
-        if (!updateSuccess) {
-            showAlert('更新车辆信息失败', 'error');
-            return;
-        }
-
-        // 执行还车操作
-        const success = await dataManager.returnVehicle(bookingId);
-        if (success) {
-            // 更新当前车辆信息（如果还在详情页）
-            if (currentVehicle && currentVehicle.id === booking.vehicleId) {
-                currentVehicle.location = newLocation.trim();
-                currentVehicle.keyLocation = newKeyLocation.trim();
-                // 更新页面显示
-                document.getElementById('vehicleLocation').textContent = newLocation.trim();
-                document.getElementById('vehicleKeyLocation').textContent = newKeyLocation.trim();
-            }
-
-            // 刷新历史记录
-            await loadBookingHistory(booking.vehicleId);
-            showAlert(`还车成功！\n车辆位置：${newLocation.trim()}\n钥匙位置：${newKeyLocation.trim()}`, 'success');
-        } else {
-            showAlert('还车失败，请重试', 'error');
-        }
-    }
-}
+// 还车功能已取消（在detail.html页面不提供还车功能，请使用"我的预定"页面还车）
+// async function returnVehicle(bookingId) {
+//     ... 已注释
+// }
 
 // 删除预定记录
 function deleteBooking(bookingId) {
@@ -349,18 +229,35 @@ function setDefaultDateTime() {
     const endTimeInput = document.getElementById('endTime');
 
     if (startTimeInput && endTimeInput) {
-        // 设置开始时间为当前时间的下一个整点
-        const now = new Date();
-        now.setHours(now.getHours() + 1);
-        now.setMinutes(0);
-        now.setSeconds(0);
+        // 先检查URL参数中是否有时间
+        const urlStartTime = getUrlParameter('startTime');
+        const urlEndTime = getUrlParameter('endTime');
 
-        // 设置结束时间为开始时间后2小时
-        const end = new Date(now);
-        end.setHours(end.getHours() + 2);
+        if (urlStartTime && urlEndTime) {
+            // 使用URL传递的时间
+            const start = new Date(urlStartTime);
+            const end = new Date(urlEndTime);
 
-        startTimeInput.value = formatDateTimeForInput(now);
-        endTimeInput.value = formatDateTimeForInput(end);
+            startTimeInput.value = formatDateTimeForInput(start);
+            endTimeInput.value = formatDateTimeForInput(end);
+
+            // 高亮显示，提示用户这是预选的时间
+            startTimeInput.style.backgroundColor = '#e3f2fd';
+            endTimeInput.style.backgroundColor = '#e3f2fd';
+        } else {
+            // 设置开始时间为当前时间的下一个整点
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            now.setMinutes(0);
+            now.setSeconds(0);
+
+            // 设置结束时间为开始时间后2小时
+            const end = new Date(now);
+            end.setHours(end.getHours() + 2);
+
+            startTimeInput.value = formatDateTimeForInput(now);
+            endTimeInput.value = formatDateTimeForInput(end);
+        }
     }
 }
 
@@ -423,8 +320,7 @@ async function handleBookingSubmit(e) {
         // 保存预定
         const savedBooking = await dataManager.addBooking(booking);
 
-        // 保存用户姓名到本地，供下次自动填充
-        feishuIntegration.saveUserInfo(formData.person);
+        // 注意：不需要保存用户姓名，因为已经在userManager中保存了
 
         // 刷新预定历史记录
         await loadBookingHistory(currentVehicle.id);
@@ -437,6 +333,9 @@ async function handleBookingSubmit(e) {
 
         // 重新设置默认时间
         setDefaultDateTime();
+
+        // 重新填充用户姓名（因为reset会清空）
+        await autoFillUserName();
 
         // 3秒后跳转到首页并显示提示
         setTimeout(() => {
@@ -566,53 +465,6 @@ function showError(message) {
             ${message}
         </div>
     `;
-}
-
-// 显示我的预定
-async function showMyBookings() {
-    try {
-        // 获取当前用户姓名
-        let currentUser = feishuIntegration.getSavedUserInfo();
-
-        // 如果没有保存的姓名，提示用户输入
-        if (!currentUser) {
-            currentUser = prompt('请输入您的姓名以查看您的预定记录:');
-            if (!currentUser || !currentUser.trim()) {
-                return;
-            }
-            currentUser = currentUser.trim();
-        }
-
-        const bookings = await dataManager.getAllBookings();
-
-        // 筛选出当前用户的未还车预定记录
-        const myBookings = bookings.filter(b => b.person === currentUser && !b.returned);
-
-        if (!myBookings || myBookings.length === 0) {
-            alert(`${currentUser}，您还没有进行中的预定`);
-            return;
-        }
-
-        let message = `=== ${currentUser} 的预定记录 ===\n\n`;
-
-        for (let index = 0; index < myBookings.length; index++) {
-            const booking = myBookings[index];
-            const vehicle = await dataManager.getVehicleById(booking.vehicleId);
-            const vehicleName = vehicle ? (vehicle.model || vehicle.vehicle) : '未知车辆';
-
-            message += `【预定 ${index + 1}】\n`;
-            message += `车辆: ${vehicleName}\n`;
-            message += `申请原因: ${booking.reason}\n`;
-            message += `开始时间: ${formatDateTime(booking.startTime)}\n`;
-            message += `结束时间: ${formatDateTime(booking.endTime)}\n`;
-            message += '\n---\n\n';
-        }
-
-        alert(message);
-    } catch (error) {
-        console.error('加载预定记录失败:', error);
-        alert('加载预定记录失败，请稍后重试');
-    }
 }
 
 // 格式化日期时间显示

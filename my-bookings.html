@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="还车 - 查看和管理预定记录">
+    <title>还车 - 车辆预定系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 头部导航 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">车辆预定系统</a>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">预定车辆</a>
+                    <a href="my-bookings.html" class="nav-link">还车</a>
+                    <a href="statistics.html" class="nav-link">使用统计</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="main-content">
+        <div class="container">
+            <!-- 返回按钮 -->
+            <a href="index.html" class="back-btn">
+                <span>&larr;</span>
+                <span>返回列表</span>
+            </a>
+
+            <!-- 页面标题 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 class="page-title">还车管理</h1>
+                <div id="userInfo" style="font-size: 16px; color: #666;">
+                    <span id="userName"></span>
+                </div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+
+            <!-- 预定列表容器 -->
+            <div id="bookingsContainer" class="hidden">
+                <!-- 进行中的预定 -->
+                <div class="bookings-section">
+                    <h2 class="section-title">
+                        <span style="color: #E94B3C;">●</span> 进行中的预定
+                    </h2>
+                    <div id="activeBookingsList" class="bookings-list"></div>
+                </div>
+
+                <!-- 已完成的预定 -->
+                <div class="bookings-section" style="margin-top: 40px;">
+                    <h2 class="section-title">
+                        <span style="color: #50C878;">●</span> 已完成的预定
+                    </h2>
+                    <div id="completedBookingsList" class="bookings-list"></div>
+                </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="text-center hidden" style="padding: 60px 20px;">
+                <h2 style="color: #999;">暂无预定记录</h2>
+                <p style="color: #666;">您还没有预定过任何车辆</p>
+                <a href="index.html" class="view-detail-btn" style="max-width: 200px; margin: 20px auto; display: block;">
+                    去预定车辆
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 车辆预定系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 引入JavaScript文件 -->
+    <script src="js/user-manager.js?v=12"></script>
+    <script src="js/data-jsonbin.js?v=11"></script>
+    <script src="js/my-bookings.js?v=12"></script>
+    <script>
+        // 初始化用户系统
+        document.addEventListener('DOMContentLoaded', async function() {
+            await userManager.init();
+        });
+    </script>
+</body>
+</html>

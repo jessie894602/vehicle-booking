@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>诊断：检查 JSONBin</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 50px auto; padding: 20px; }
+        button { background: #4CAF50; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        button:hover { background: #45a049; }
+        #result { background: #f5f5f5; padding: 20px; border-radius: 5px; margin-top: 20px; }
+        .info { color: #1976d2; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🔍 诊断工具</h1>
+    <button onclick="checkJSONBin()">1. 检查 JSONBin 数据</button>
+    <button onclick="clearLocalStorage()">2. 清除本地缓存</button>
+    <button onclick="uploadCorrectData()">3. 重新上传正确数据</button>
+    <div id="result"></div>
+
+    <script>
+        const MASTER_KEY = '$2a$10$0.el1vGg3USJgC1Gtui4k.FbLS9R6XHKyqM6n7YS9HjQgm2trFXW.';
+        const BIN_ID = '699fd213d0ea881f40da7ef2';
+
+        async function checkJSONBin() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在检查 JSONBin...</p>';
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                const data = await response.json();
+
+                const vehicles = data.record.vehicles || [];
+                const firstVehicle = vehicles[0] || {};
+
+                result.innerHTML = `
+                    <h3 class="info">✅ JSONBin 当前数据：</h3>
+                    <p><strong>车辆数量:</strong> ${vehicles.length}</p>
+                    <p><strong>第一辆车的字段:</strong></p>
+                    <pre>${JSON.stringify(firstVehicle, null, 2)}</pre>
+                    <hr>
+                    <h3>📋 诊断结果：</h3>
+                    ${vehicles.length === 3 ?
+                        '<p style="color:green;">✓ 数据正确（3辆车）</p>' :
+                        '<p style="color:red;">✗ 数据错误（应该是3辆，实际是' + vehicles.length + '辆）</p>'
+                    }
+                    ${firstVehicle.model ?
+                        '<p style="color:green;">✓ 字段名正确（使用 model）</p>' :
+                        '<p style="color:red;">✗ 字段名错误（没有 model 字段）</p>'
+                    }
+                `;
+            } catch (error) {
+                result.innerHTML = `<p style="color:red;">❌ 错误: ${error.message}</p>`;
+            }
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            document.getElementById('result').innerHTML =
+                '<p style="color:green;">✅ 本地缓存已清除！现在刷新 index.html 试试</p>';
+        }
+
+        async function uploadCorrectData() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>正在上传正确的数据...</p>';
+
+            const correctData = {
+                "vehicles": [
+                    {
+                        "id": "VEH001",
+                        "code": "765772",
+                        "model": "Model3",
+                        "color": "Model3白色黑色黑色 5座",
+                        "plateNumber": "京ACV6773",
+                        "location": "北京市",
+                        "city": "北京市",
+                        "vin": "LRW3E7EKXSC495307",
+                        "series": "特斯拉",
+                        "vehicle": "Model3",
+                        "stage": "SOP",
+                        "image": "https://via.placeholder.com/400x300/4A90E2/ffffff?text=Model3"
+                    },
+                    {
+                        "id": "VEH002",
+                        "code": "763702",
+                        "model": "W02 Ultra",
+                        "color": "小象灰拼黑外/黑深灰灰内/ULTRA/21寸全涂轮",
+                        "plateNumber": "",
+                        "location": "常州市",
+                        "city": "常州市",
+                        "vin": "HLX13B176S1200049",
+                        "series": "W02",
+                        "vehicle": "W02 Ultra",
+                        "stage": "PPV",
+                        "image": "https://via.placeholder.com/400x300/6A4C93/ffffff?text=W02"
+                    },
+                    {
+                        "id": "VEH003",
+                        "code": "763520",
+                        "model": "MEGA MAX",
+                        "color": "科技绿/爱马仕橙/HRE/7座",
+                        "plateNumber": "",
+                        "location": "",
+                        "city": "北京市",
+                        "vin": "HLX14B170S1996293",
+                        "series": "理想MEGA",
+                        "vehicle": "MEGA MAX",
+                        "stage": "EP2",
+                        "image": "https://via.placeholder.com/400x300/9B59B6/ffffff?text=MEGA+MAX"
+                    }
+                ],
+                "bookings": []
+            };
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify(correctData)
+                });
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <h3 style="color:green;">✅ 上传成功！</h3>
+                        <p>已上传 3 辆车辆数据（使用正确的字段名）</p>
+                        <p><strong>下一步：点击"清除本地缓存"按钮，然后刷新 index.html</strong></p>
+                    `;
+                } else {
+                    result.innerHTML = '<p style="color:red;">❌ 上传失败</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `<p style="color:red;">❌ 错误: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

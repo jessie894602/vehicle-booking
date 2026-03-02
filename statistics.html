@@ -14,8 +14,8 @@
             <div class="header-content">
                 <a href="index.html" class="logo">车辆预定系统</a>
                 <nav class="nav-links">
-                    <a href="index.html" class="nav-link">车辆列表</a>
-                    <a href="#" class="nav-link" id="myBookingsLink">我的预定</a>
+                    <a href="index.html" class="nav-link">预定车辆</a>
+                    <a href="my-bookings.html" class="nav-link">还车</a>
                     <a href="statistics.html" class="nav-link">使用统计</a>
                 </nav>
             </div>
@@ -62,10 +62,10 @@
                 </div>
             </div>
 
-            <!-- 车辆统计列表 -->
-            <div class="statistics-list">
-                <h2 style="margin-bottom: 20px;">车辆详细统计</h2>
-                <div id="statisticsList"></div>
+            <!-- 月度使用率分析 -->
+            <div class="monthly-analysis-section">
+                <h2 style="margin-bottom: 20px;">📊 月度使用率分析</h2>
+                <div id="monthlyUtilizationTable"></div>
             </div>
 
             <!-- 空状态 -->
@@ -85,7 +85,14 @@
     </footer>
 
     <!-- 引入JavaScript文件 -->
+    <script src="js/user-manager.js?v=12"></script>
     <script src="js/data-jsonbin.js?v=11"></script>
     <script src="js/statistics.js?v=11"></script>
+    <script>
+        // 初始化用户系统
+        document.addEventListener('DOMContentLoaded', async function() {
+            await userManager.init();
+        });
+    </script>
 </body>
 </html>

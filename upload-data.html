@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>上传车辆数据到 JSONBin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>上传车辆数据到 JSONBin</h1>
+    <p>点击下面的按钮，将示例车辆数据上传到你的 JSONBin：</p>
+
+    <button onclick="uploadData()">上传车辆数据</button>
+
+    <div id="result"></div>
+
+    <script>
+        const JSONBIN_API_KEY = '$2a$10$0.el1vGg3USJgC1Gtui4k.FbLS9R6XHKyqM6n7YS9HjQgm2trFXW.';
+        const JSONBIN_BIN_ID = '699fd213d0ea881f40da7ef2';
+
+        // 示例车辆数据
+        const initialData = {
+            "vehicles": [
+                {
+                    "id": "VEH001",
+                    "code": "765772",
+                    "model": "Model3",
+                    "color": "Model3白色黑色黑色 5座",
+                    "plateNumber": "京ACV6773",
+                    "location": "北京市",
+                    "city": "北京市",
+                    "vin": "LRW3E7EKXSC495307",
+                    "series": "特斯拉",
+                    "vehicle": "Model3",
+                    "stage": "SOP",
+                    "image": "https://via.placeholder.com/400x300/4A90E2/ffffff?text=Model3"
+                },
+                {
+                    "id": "VEH002",
+                    "code": "763702",
+                    "model": "W02 Ultra",
+                    "color": "小象灰拼黑外/黑深灰灰内/ULTRA/21寸全涂轮",
+                    "plateNumber": "",
+                    "location": "常州市",
+                    "city": "常州市",
+                    "vin": "HLX13B176S1200049",
+                    "series": "W02",
+                    "vehicle": "W02 Ultra",
+                    "stage": "PPV",
+                    "image": "https://via.placeholder.com/400x300/6A4C93/ffffff?text=W02"
+                },
+                {
+                    "id": "VEH003",
+                    "code": "763520",
+                    "model": "MEGA MAX",
+                    "color": "科技绿/爱马仕橙/HRE/7座",
+                    "plateNumber": "",
+                    "location": "",
+                    "city": "北京市",
+                    "vin": "HLX14B170S1996293",
+                    "series": "理想MEGA",
+                    "vehicle": "MEGA MAX",
+                    "stage": "EP2",
+                    "image": "https://via.placeholder.com/400x300/9B59B6/ffffff?text=MEGA+MAX"
+                }
+            ],
+            "bookings": []
+        };
+
+        async function uploadData() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>正在上传数据...</p>';
+
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_API_KEY
+                    },
+                    body: JSON.stringify(initialData)
+                });
+
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ 数据上传成功！</h3>
+                        <p>已上传 ${initialData.vehicles.length} 辆车辆数据</p>
+                        <p><strong>现在可以关闭这个页面，打开 index.html 查看车辆列表了！</strong></p>
+                    `;
+                } else {
+                    const error = await response.json();
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `<h3>❌ 上传失败</h3><p>${error.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `<h3>❌ 错误</h3><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
