@@ -1,26 +1,243 @@
 // 车辆使用统计 - JavaScript
+// 更新时间: 2026-03-02 17:10
+// 版本: v2.1 - 修复初始化顺序
 
-// 页面初始化
-document.addEventListener('DOMContentLoaded', function() {
-    // 检查管理员权限
-    if (!userManager.isAdmin()) {
-        showAccessDenied();
-        return;
+console.log('=== Statistics.js 加载成功 ===');
+console.log('文件版本: v2.1');
+console.log('更新时间: 2026-03-02 17:10');
+
+// 统计页面初始化函数（由HTML调用）
+window.initStatisticsPage = function() {
+    console.log('=== 开始初始化统计页面 ===');
+    console.log('用户管理器状态:', userManager);
+    console.log('当前用户:', userManager.getCurrentUser());
+    console.log('是否管理员:', userManager.isAdmin());
+
+    // 根据用户权限加载不同的统计内容
+    if (userManager.isAdmin()) {
+        console.log('>>> 加载管理员统计视图');
+        // 管理员：加载全部车辆统计
+        loadStatistics();
+        bindEventListeners();
+    } else {
+        console.log('>>> 加载普通用户统计视图');
+        // 普通用户：加载个人统计
+        loadPersonalStatistics();
+    }
+};
+
+// 加载普通用户的个人统计
+async function loadPersonalStatistics() {
+    try {
+        const currentUser = userManager.getCurrentUser();
+
+        if (!currentUser) {
+            showNoUserMessage();
+            return;
+        }
+
+        const bookings = await dataManager.getAllBookings();
+        const vehicles = await dataManager.getAllVehicles();
+
+        // 筛选出当前用户已还车的记录（兼容两种字段名格式）
+        const myReturnedBookings = bookings.filter(b => {
+            const personName = b[FIELD_NAMES.person] || b.person;
+            return personName === currentUser && b.returned === true;
+        });
+
+        if (myReturnedBookings.length === 0) {
+            showNoReturnedBookings(currentUser);
+            return;
+        }
+
+        // 计算个人统计数据
+        const personalStats = calculatePersonalStats(myReturnedBookings, vehicles);
+
+        // 渲染个人统计页面
+        renderPersonalStatistics(currentUser, personalStats, myReturnedBookings, vehicles);
+
+    } catch (error) {
+        console.error('加载个人统计数据失败:', error);
+        showErrorMessage();
+    }
+}
+
+// 计算个人统计数据
+function calculatePersonalStats(bookings, vehicles) {
+    let totalHours = 0;
+    const usedVehicles = new Set();
+
+    bookings.forEach(booking => {
+        const startTime = new Date(booking[FIELD_NAMES.startTime]);
+        const endTime = new Date(booking[FIELD_NAMES.endTime]);
+        const duration = (endTime - startTime) / (1000 * 60 * 60);
+
+        totalHours += duration;
+        usedVehicles.add(booking.vehicleId);
+    });
+
+    return {
+        totalReturns: bookings.length,
+        totalHours: totalHours.toFixed(1),
+        vehicleCount: usedVehicles.size,
+        avgHoursPerUse: (totalHours / bookings.length).toFixed(1)
+    };
+}
+
+// 渲染个人统计页面
+function renderPersonalStatistics(userName, stats, bookings, vehicles) {
+    const container = document.querySelector('.container');
+
+    // 隐藏清除按钮
+    const clearBtn = document.getElementById('clearStatsBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    // 更新页面标题
+    const pageTitle = document.querySelector('.page-title');
+    if (pageTitle) {
+        pageTitle.textContent = `我的使用统计`;
     }
 
-    loadStatistics();
-    bindEventListeners();
-});
+    // 更新统计卡片
+    document.getElementById('totalVehicles').textContent = stats.vehicleCount;
+    document.getElementById('totalUsages').textContent = stats.totalReturns;
+    document.getElementById('totalHours').textContent = stats.totalHours;
+    document.getElementById('totalUsers').textContent = '1';
 
-// 显示无权限提示
-function showAccessDenied() {
+    // 修改卡片标签
+    const statLabels = document.querySelectorAll('.stat-label');
+    if (statLabels.length >= 4) {
+        statLabels[0].textContent = '使用车辆数';
+        statLabels[1].textContent = '使用次数';
+        statLabels[2].textContent = '总使用时长(小时)';
+        statLabels[3].textContent = '平均时长(小时)';
+    }
+
+    // 更新平均时长
+    document.getElementById('totalUsers').textContent = stats.avgHoursPerUse;
+
+    // 隐藏月度分析，显示个人记录
+    const monthlySection = document.querySelector('.monthly-analysis-section');
+    if (monthlySection) {
+        monthlySection.innerHTML = `
+            <h2 style="margin-bottom: 20px;">📋 我的还车记录</h2>
+            <div id="personalRecordsTable"></div>
+        `;
+    }
+
+    // 渲染个人还车记录
+    renderPersonalRecords(bookings, vehicles);
+
+    // 隐藏空状态
+    document.getElementById('emptyState').classList.add('hidden');
+}
+
+// 渲染个人还车记录表格
+function renderPersonalRecords(bookings, vehicles) {
+    const tableContainer = document.getElementById('personalRecordsTable');
+    if (!tableContainer) return;
+
+    // 按还车时间降序排序
+    bookings.sort((a, b) => new Date(b.returnedAt) - new Date(a.returnedAt));
+
+    const tableHTML = `
+        <table class="monthly-table">
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>车辆</th>
+                    <th>申请原因</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>使用时长</th>
+                    <th>还车时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bookings.map((booking, index) => {
+                    const vehicle = vehicles.find(v => v.id === booking.vehicleId);
+                    const vehicleName = vehicle ? (vehicle[FIELD_NAMES.model] || vehicle[FIELD_NAMES.vehicle]) : '未知车辆';
+                    const vehicleImage = vehicle ? vehicle.image : 'images/default.jpg';
+
+                    const startTime = new Date(booking[FIELD_NAMES.startTime]);
+                    const endTime = new Date(booking[FIELD_NAMES.endTime]);
+                    const duration = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(1);
+
+                    return `
+                        <tr>
+                            <td class="rank-cell">${index + 1}</td>
+                            <td class="vehicle-name-cell">
+                                <div class="vehicle-info-inline">
+                                    <img src="${vehicleImage}"
+                                         alt="${vehicleName}"
+                                         class="vehicle-thumb"
+                                         onerror="this.style.display='none';">
+                                    <span>${vehicleName}</span>
+                                </div>
+                            </td>
+                            <td class="history-reason">${booking[FIELD_NAMES.reason]}</td>
+                            <td>${formatDateTime(booking[FIELD_NAMES.startTime])}</td>
+                            <td>${formatDateTime(booking[FIELD_NAMES.endTime])}</td>
+                            <td class="number-cell">${duration}小时</td>
+                            <td>${formatDateTime(booking.returnedAt)}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    tableContainer.innerHTML = tableHTML;
+}
+
+// 显示无用户信息提示
+function showNoUserMessage() {
     const container = document.querySelector('.container');
     container.innerHTML = `
         <div style="text-align: center; padding: 100px 20px;">
-            <div style="font-size: 80px; margin-bottom: 20px;">🔒</div>
-            <h2 style="color: #666; margin-bottom: 15px;">访问受限</h2>
-            <p style="color: #999; font-size: 16px;">使用统计功能仅对管理员开放</p>
+            <div style="font-size: 80px; margin-bottom: 20px;">👤</div>
+            <h2 style="color: #666; margin-bottom: 15px;">未找到用户信息</h2>
+            <p style="color: #999; font-size: 16px;">请先完成用户设置</p>
             <a href="index.html" class="view-detail-btn" style="max-width: 200px; margin: 30px auto; display: block; text-decoration: none;">返回首页</a>
+        </div>
+    `;
+}
+
+// 显示无还车记录提示
+function showNoReturnedBookings(userName) {
+    const container = document.querySelector('.container');
+
+    // 隐藏清除按钮
+    const clearBtn = document.getElementById('clearStatsBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    // 隐藏统计卡片
+    const statsOverview = document.querySelector('.stats-overview');
+    if (statsOverview) statsOverview.style.display = 'none';
+
+    // 隐藏月度分析
+    const monthlySection = document.querySelector('.monthly-analysis-section');
+    if (monthlySection) monthlySection.style.display = 'none';
+
+    // 显示空状态
+    const emptyState = document.getElementById('emptyState');
+    emptyState.innerHTML = `
+        <h2 style="color: #999;">暂无还车记录</h2>
+        <p style="color: #666;">${userName}，您还没有已还车的记录</p>
+        <a href="my-bookings.html" class="view-detail-btn" style="max-width: 200px; margin: 20px auto; display: block;">查看我的预定</a>
+    `;
+    emptyState.classList.remove('hidden');
+}
+
+// 显示错误信息
+function showErrorMessage() {
+    const container = document.querySelector('.container');
+    container.innerHTML = `
+        <div style="text-align: center; padding: 100px 20px;">
+            <div style="font-size: 80px; margin-bottom: 20px;">⚠️</div>
+            <h2 style="color: #666; margin-bottom: 15px;">加载失败</h2>
+            <p style="color: #999; font-size: 16px;">无法加载统计数据，请稍后重试</p>
+            <button onclick="location.reload()" class="view-detail-btn" style="max-width: 200px; margin: 30px auto; display: block;">刷新页面</button>
         </div>
     `;
 }

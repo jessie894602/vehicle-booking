@@ -141,12 +141,13 @@ class UserManager {
         const isAdmin = this.isAdmin();
         const adminBadge = isAdmin ? '<span class="admin-badge">管理员</span>' : '';
 
-        // 创建用户指示器（不含切换用户按钮）
+        // 创建用户指示器（包含切换用户按钮）
         const indicator = document.createElement('div');
         indicator.id = 'userIndicator';
         indicator.className = 'user-indicator';
         indicator.innerHTML = `
             <span class="user-name">👤 ${userName}${adminBadge}</span>
+            <button class="switch-user-btn" id="switchUserBtn" title="切换用户">🔄</button>
         `;
 
         // 插入到导航栏链接的最后
@@ -154,12 +155,32 @@ class UserManager {
         if (navLinks) {
             navLinks.appendChild(indicator);
         }
+
+        // 绑定切换用户按钮事件
+        const switchBtn = document.getElementById('switchUserBtn');
+        if (switchBtn) {
+            switchBtn.addEventListener('click', () => this.switchUser());
+        }
     }
 
-    // 移除切换用户功能 - 用户名与电脑永久绑定
-    // async switchUser() {
-    //     // 功能已禁用
-    // }
+    // 切换用户功能
+    async switchUser() {
+        const currentUser = this.getCurrentUser();
+        const confirmed = confirm(`当前用户: ${currentUser}\n\n是否切换到其他用户？`);
+
+        if (!confirmed) return;
+
+        // 清除当前用户
+        this.clearUser();
+
+        // 显示欢迎弹窗让用户重新输入
+        const newUser = await this.showWelcomeModal();
+
+        // 刷新页面以应用新用户
+        if (newUser) {
+            location.reload();
+        }
+    }
 
     // 初始化用户系统
     async init() {

@@ -1501,6 +1501,31 @@ textarea.form-control {
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 }
 
+.switch-user-btn {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    padding: 0;
+}
+
+.switch-user-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: rotate(180deg);
+}
+
+.switch-user-btn:active {
+    transform: scale(0.95) rotate(180deg);
+}
+
 .admin-badge-inline {
     display: inline-block;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
