@@ -302,6 +302,10 @@ body {
     transition: var(--transition);
     cursor: pointer;
     border: 1px solid transparent;
+    user-select: none; /* 禁止文本选择，改善拖拽体验 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .schedule-hour-cell.available {

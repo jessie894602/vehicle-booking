@@ -143,14 +143,63 @@ async function createVehicleCard(vehicle) {
         </div>
     `;
 
-    // 为所有可用的小时格子添加点击事件
+    // 为所有可用的小时格子添加点击和拖拽事件
     setTimeout(() => {
         const cells = row.querySelectorAll('.schedule-hour-cell.available');
+        let isDragging = false;
+        let dragStartCell = null;
+
         cells.forEach(cell => {
             cell.style.cursor = 'pointer';
-            cell.addEventListener('click', function() {
-                toggleCellSelection(this, row);
+
+            // 鼠标按下 - 开始拖拽
+            cell.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                isDragging = true;
+                dragStartCell = this;
+
+                // 清除之前的选中
+                cells.forEach(c => c.classList.remove('selected'));
+
+                // 选中起始格子
+                this.classList.add('selected');
             });
+
+            // 鼠标移动 - 拖拽中
+            cell.addEventListener('mouseenter', function() {
+                if (isDragging && dragStartCell) {
+                    // 清除所有选中
+                    cells.forEach(c => c.classList.remove('selected'));
+
+                    // 计算起始和结束的索引
+                    const allCells = Array.from(cells);
+                    const startIndex = allCells.indexOf(dragStartCell);
+                    const endIndex = allCells.indexOf(this);
+
+                    // 选中从起始到当前的所有格子
+                    const minIndex = Math.min(startIndex, endIndex);
+                    const maxIndex = Math.max(startIndex, endIndex);
+
+                    for (let i = minIndex; i <= maxIndex; i++) {
+                        allCells[i].classList.add('selected');
+                    }
+                }
+            });
+
+            // 单击事件（不拖拽时）
+            cell.addEventListener('click', function(e) {
+                if (!isDragging) {
+                    toggleCellSelection(this, row);
+                }
+            });
+        });
+
+        // 鼠标松开 - 结束拖拽（在整个文档上监听）
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                dragStartCell = null;
+            }
         });
 
         // 为预定按钮添加点击事件
