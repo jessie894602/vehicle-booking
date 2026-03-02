@@ -141,13 +141,12 @@ class UserManager {
         const isAdmin = this.isAdmin();
         const adminBadge = isAdmin ? '<span class="admin-badge">管理员</span>' : '';
 
-        // 创建用户指示器
+        // 创建用户指示器（不含切换用户按钮）
         const indicator = document.createElement('div');
         indicator.id = 'userIndicator';
         indicator.className = 'user-indicator';
         indicator.innerHTML = `
             <span class="user-name">👤 ${userName}${adminBadge}</span>
-            <button class="user-switch-btn" onclick="userManager.switchUser()">切换用户</button>
         `;
 
         // 插入到导航栏链接的最后
@@ -157,17 +156,10 @@ class UserManager {
         }
     }
 
-    // 切换用户
-    async switchUser() {
-        if (confirm('切换用户将清除当前登录信息，确认要切换吗？')) {
-            this.clearUser();
-            const newName = await this.showWelcomeModal();
-            if (newName) {
-                // 刷新页面
-                location.reload();
-            }
-        }
-    }
+    // 移除切换用户功能 - 用户名与电脑永久绑定
+    // async switchUser() {
+    //     // 功能已禁用
+    // }
 
     // 初始化用户系统
     async init() {
