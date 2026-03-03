@@ -61,6 +61,9 @@ class DataManager {
             if (!this.data.bookings) {
                 this.data.bookings = [];
             }
+            if (!this.data.deviceBindings) {
+                this.data.deviceBindings = {};
+            }
         }
         return this.data;
     }
@@ -165,6 +168,28 @@ class DataManager {
                 endTime: null
             };
         }
+    }
+
+    // 获取设备绑定的用户
+    async getDeviceBinding(deviceId) {
+        await this.loadData();
+        return this.data.deviceBindings[deviceId] || null;
+    }
+
+    // 绑定设备和用户
+    async bindDeviceToUser(deviceId, userName) {
+        await this.loadData();
+        this.data.deviceBindings[deviceId] = userName;
+        await this.saveData();
+        return true;
+    }
+
+    // 解绑设备（用于管理员功能）
+    async unbindDevice(deviceId) {
+        await this.loadData();
+        delete this.data.deviceBindings[deviceId];
+        await this.saveData();
+        return true;
     }
 }
 

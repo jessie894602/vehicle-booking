@@ -4,6 +4,43 @@ class UserManager {
         this.storageKey = 'vehicle_booking_user';
         // 管理员名单
         this.adminList = ['高淑珺', '王聪'];
+        this.deviceId = null;
+    }
+
+    // 生成设备指纹
+    generateDeviceFingerprint() {
+        const components = [
+            navigator.userAgent,
+            screen.width + 'x' + screen.height,
+            screen.colorDepth,
+            navigator.language,
+            navigator.hardwareConcurrency || 0,
+            new Date().getTimezoneOffset(),
+            navigator.platform,
+            navigator.maxTouchPoints || 0
+        ];
+
+        const fingerprint = components.join('|');
+        return this.simpleHash(fingerprint);
+    }
+
+    // 简单哈希函数
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return 'device_' + Math.abs(hash).toString(36);
+    }
+
+    // 获取设备ID
+    getDeviceId() {
+        if (!this.deviceId) {
+            this.deviceId = this.generateDeviceFingerprint();
+        }
+        return this.deviceId;
     }
 
     // 获取当前用户姓名
@@ -166,7 +203,7 @@ class UserManager {
     // 切换用户功能
     async switchUser() {
         const currentUser = this.getCurrentUser();
-        const confirmed = confirm(`当前用户: ${currentUser}\n\n是否切换到其他用户？`);
+        const confirmed = confirm(`当前用户: ${currentUser}\n\n是否切换到其他用户？\n\n注意：切换后，此设备将绑定到新用户。`);
 
         if (!confirmed) return;
 
@@ -176,17 +213,49 @@ class UserManager {
         // 显示欢迎弹窗让用户重新输入
         const newUser = await this.showWelcomeModal();
 
-        // 刷新页面以应用新用户
+        // 更新设备绑定
         if (newUser) {
+            const deviceId = this.getDeviceId();
+            await dataManager.bindDeviceToUser(deviceId, newUser);
+            console.log('已更新设备绑定:', deviceId, newUser);
+
+            // 刷新页面以应用新用户
             location.reload();
         }
     }
 
     // 初始化用户系统
     async init() {
-        if (this.isFirstVisit()) {
-            // 首次访问，显示欢迎弹窗
-            await this.showWelcomeModal();
+        // 获取设备ID
+        const deviceId = this.getDeviceId();
+        console.log('设备ID:', deviceId);
+
+        // 检查设备是否已绑定用户
+        const boundUser = await dataManager.getDeviceBinding(deviceId);
+
+        if (boundUser) {
+            // 设备已绑定用户，直接使用
+            console.log('设备已绑定用户:', boundUser);
+            this.saveUser(boundUser);
+        } else {
+            // 设备未绑定，检查是否首次访问
+            if (this.isFirstVisit()) {
+                // 首次访问，显示欢迎弹窗
+                const userName = await this.showWelcomeModal();
+
+                // 绑定设备和用户
+                if (userName) {
+                    await dataManager.bindDeviceToUser(deviceId, userName);
+                    console.log('已绑定设备和用户:', deviceId, userName);
+                }
+            } else {
+                // 有本地用户记录，绑定设备
+                const localUser = this.getCurrentUser();
+                if (localUser) {
+                    await dataManager.bindDeviceToUser(deviceId, localUser);
+                    console.log('已绑定设备和本地用户:', deviceId, localUser);
+                }
+            }
         }
 
         // 显示用户指示器
