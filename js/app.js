@@ -85,7 +85,7 @@ function renderScheduleHeader(headerElement) {
     headerHTML += '<div class="schedule-header-scroll-wrapper" id="headerScrollWrapper">';
     headerHTML += '<div class="schedule-days-container">';
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
 
@@ -108,12 +108,12 @@ function renderScheduleHeader(headerElement) {
     headerElement.innerHTML = headerHTML;
 }
 
-// 创建车辆卡片元素（新版：横向布局+7天预定进度条，无日期标题）
+// 创建车辆卡片元素（新版：横向布局+14天预定进度条，无日期标题）
 async function createVehicleCard(vehicle) {
     const row = document.createElement('div');
     row.className = 'vehicle-row';
 
-    // 获取未来7天的预定情况
+    // 获取未来14天的预定情况
     const weekSchedule = await getWeekSchedule(vehicle.id);
 
     row.innerHTML = `
@@ -319,7 +319,7 @@ function setupScrollSync() {
     });
 }
 
-// 获取未来7天的预定情况（按小时拆分：9:00-18:00）
+// 获取未来14天的预定情况（按小时拆分：9:00-18:00）
 async function getWeekSchedule(vehicleId) {
     const bookings = await dataManager.getBookingsByVehicleId(vehicleId);
     const schedule = [];
@@ -329,7 +329,7 @@ async function getWeekSchedule(vehicleId) {
     // 工作时间：9:00-18:00，共10个小时
     const workHours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
 
