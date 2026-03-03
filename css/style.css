@@ -153,8 +153,25 @@ body {
     padding: 0 15px;
 }
 
+/* 显示蓝色滚动条 */
 .schedule-header-scroll-wrapper::-webkit-scrollbar {
-    display: none;
+    height: 10px;
+}
+
+.schedule-header-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+    margin: 0 10px;
+}
+
+.schedule-header-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #4A90E2;
+    border-radius: 10px;
+    border: 2px solid #f0f0f0;
+}
+
+.schedule-header-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #3a7bc8;
 }
 
 .schedule-day-column-header {
@@ -235,7 +252,7 @@ body {
     color: var(--text-dark);
 }
 
-/* 一周预定进度条区域（中间可滚动） */
+/* 一周预定进度条区域（中间可滚动，但隐藏滚动条） */
 .vehicle-schedule {
     flex: 1;
     overflow-x: auto;
@@ -243,23 +260,9 @@ body {
     padding: 0 15px;
 }
 
+/* 隐藏车辆行的滚动条，统一使用表头滚动条 */
 .vehicle-schedule::-webkit-scrollbar {
-    height: 8px;
-}
-
-.vehicle-schedule::-webkit-scrollbar-track {
-    background: transparent;
-    margin: 0 120px 0 135px; /* 与左右固定列对齐 */
-}
-
-.vehicle-schedule::-webkit-scrollbar-thumb {
-    background: rgba(74, 144, 226, 0.3);
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.vehicle-schedule::-webkit-scrollbar-thumb:hover {
-    background: rgba(74, 144, 226, 0.6);
+    display: none;
 }
 
 .schedule-days-container {
