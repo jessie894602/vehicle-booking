@@ -48,18 +48,14 @@ async function loadMyBookings() {
             return;
         }
 
-        // 分类预定记录
+        // 分类预定记录 - 只显示进行中的预定
         const activeBookings = myBookings.filter(b => !b.returned);
-        const completedBookings = myBookings.filter(b => b.returned);
 
         // 显示预定列表
         bookingsContainer.classList.remove('hidden');
 
         // 渲染进行中的预定
         await renderBookingsList('activeBookingsList', activeBookings, false, isAdmin);
-
-        // 渲染已完成的预定
-        await renderBookingsList('completedBookingsList', completedBookings, true, isAdmin);
 
     } catch (error) {
         console.error('加载预定记录失败:', error);

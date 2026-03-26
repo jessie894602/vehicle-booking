@@ -116,7 +116,15 @@ class DataManager {
     }
 
     async returnVehicle(bookingId) {
-        return await this.deleteBooking(bookingId);
+        await this.loadData();
+        const booking = this.data.bookings.find(b => b.id === bookingId);
+        if (booking) {
+            booking.returned = true;
+            booking.returnedAt = new Date().toISOString();
+            await this.saveData();
+            return true;
+        }
+        return false;
     }
 
     async getBookingsByVehicleId(vehicleId) {
