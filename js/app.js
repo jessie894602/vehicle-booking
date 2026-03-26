@@ -148,6 +148,8 @@ async function createVehicleCard(vehicle) {
         const cells = row.querySelectorAll('.schedule-hour-cell.available');
         let isDragging = false;
         let dragStartCell = null;
+        let mouseDownTime = 0;
+        let hasMouseMoved = false;
 
         cells.forEach(cell => {
             cell.style.cursor = 'pointer';
@@ -157,19 +159,23 @@ async function createVehicleCard(vehicle) {
                 e.preventDefault();
                 isDragging = true;
                 dragStartCell = this;
+                mouseDownTime = Date.now();
+                hasMouseMoved = false;
 
-                // 清除之前的选中
-                cells.forEach(c => c.classList.remove('selected'));
-
-                // 选中起始格子
-                this.classList.add('selected');
+                // 选中起始格子（拖拽模式）
+                this.classList.add('dragging-start');
             });
 
             // 鼠标移动 - 拖拽中
             cell.addEventListener('mouseenter', function() {
                 if (isDragging && dragStartCell) {
+                    hasMouseMoved = true;
+
                     // 清除所有选中
-                    cells.forEach(c => c.classList.remove('selected'));
+                    cells.forEach(c => {
+                        c.classList.remove('selected');
+                        c.classList.remove('dragging-start');
+                    });
 
                     // 计算起始和结束的索引
                     const allCells = Array.from(cells);
@@ -185,20 +191,35 @@ async function createVehicleCard(vehicle) {
                     }
                 }
             });
-
-            // 单击事件（不拖拽时）
-            cell.addEventListener('click', function(e) {
-                if (!isDragging) {
-                    toggleCellSelection(this, row);
-                }
-            });
         });
 
         // 鼠标松开 - 结束拖拽（在整个文档上监听）
-        document.addEventListener('mouseup', function() {
+        document.addEventListener('mouseup', function(e) {
             if (isDragging) {
+                const mouseUpTime = Date.now();
+                const timeDiff = mouseUpTime - mouseDownTime;
+
+                // 判断是点击还是拖拽（点击时间短且没有移动）
+                if (timeDiff < 300 && !hasMouseMoved && dragStartCell) {
+                    // 这是一个点击操作，切换单个格子的选中状态
+                    cells.forEach(c => c.classList.remove('dragging-start'));
+                    toggleCellSelection(dragStartCell, row);
+                } else if (hasMouseMoved) {
+                    // 这是拖拽操作，已经在 mouseenter 中处理了选择
+                    cells.forEach(c => c.classList.remove('dragging-start'));
+                } else {
+                    // 快速点击但没有拖拽，移除临时标记并选中
+                    dragStartCell.classList.remove('dragging-start');
+                    if (!dragStartCell.classList.contains('selected')) {
+                        // 清除之前的选中
+                        cells.forEach(c => c.classList.remove('selected'));
+                        dragStartCell.classList.add('selected');
+                    }
+                }
+
                 isDragging = false;
                 dragStartCell = null;
+                hasMouseMoved = false;
             }
         });
 
