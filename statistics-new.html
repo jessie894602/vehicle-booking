@@ -30,7 +30,10 @@
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h1 class="page-title">车辆使用统计</h1>
-                <button id="clearStatsBtn" class="btn-clear">清除所有统计</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="exportDataBtn" class="btn-export">📥 导出数据</button>
+                    <button id="clearStatsBtn" class="btn-clear">清除所有统计</button>
+                </div>
             </div>
 
             <!-- 统计概览 -->
@@ -79,6 +82,66 @@
             </div>
         </div>
     </main>
+
+    <!-- 导出数据弹窗 -->
+    <div id="exportModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>导出预定数据</h2>
+                <span class="modal-close" onclick="closeExportModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">时间范围</label>
+                    <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px;">
+                        <input type="date" id="exportStartDate" class="form-control" style="flex: 1;">
+                        <span>至</span>
+                        <input type="date" id="exportEndDate" class="form-control" style="flex: 1;">
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="setDateRange('all')" class="btn-date-preset">全部数据</button>
+                        <button onclick="setDateRange('week')" class="btn-date-preset">最近一周</button>
+                        <button onclick="setDateRange('month')" class="btn-date-preset">最近一个月</button>
+                        <button onclick="setDateRange('threeMonths')" class="btn-date-preset">最近三个月</button>
+                        <button onclick="setDateRange('year')" class="btn-date-preset">最近一年</button>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label">包含字段</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_person"> 使用人
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_vehicle"> 车辆名称
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_reason"> 申请原因
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_startTime"> 开始时间
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_endTime"> 结束时间
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_duration"> 使用时长
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_status"> 状态
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" checked id="field_returnTime"> 还车时间
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeExportModal()" class="btn-cancel">取消</button>
+                <button onclick="executeExport()" class="btn-confirm">导出 CSV</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 页脚 -->
     <footer class="footer">

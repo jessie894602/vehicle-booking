@@ -500,10 +500,17 @@ async function toggleVehicleDetail(vehicleId) {
     // 加载历史数据
     try {
         const bookings = await dataManager.getAllBookings();
-        const vehicleBookings = bookings.filter(b => b.vehicleId === vehicleId);
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+
+        // 筛选该车辆最近30天的记录
+        const vehicleBookings = bookings.filter(b => {
+            const startTime = new Date(b[FIELD_NAMES.startTime]);
+            return b.vehicleId === vehicleId && startTime >= thirtyDaysAgo;
+        });
 
         if (vehicleBookings.length === 0) {
-            detailContent.innerHTML = '<div class="no-history">该车辆暂无使用历史</div>';
+            detailContent.innerHTML = '<div class="no-history">该车辆最近30天暂无使用记录</div>';
             detailContent.dataset.loaded = 'true';
             return;
         }
@@ -513,7 +520,7 @@ async function toggleVehicleDetail(vehicleId) {
 
         // 渲染历史记录表格
         const historyHTML = `
-            <h4 class="detail-title">历史使用记录（共 ${vehicleBookings.length} 次）</h4>
+            <h4 class="detail-title">最近30天使用记录（共 ${vehicleBookings.length} 次）</h4>
             <table class="history-table">
                 <thead>
                     <tr>
@@ -622,3 +629,252 @@ function formatDateTime(dateString) {
 
     return `${year}/${month}/${day} ${hours}:${minutes}`;
 }
+
+// ========== 数据导出功能 ==========
+
+// 打开导出弹窗
+window.openExportModal = function() {
+    const modal = document.getElementById('exportModal');
+    modal.style.display = 'flex';
+
+    // 默认设置为最近一个月
+    setDateRange('month');
+};
+
+// 关闭导出弹窗
+window.closeExportModal = function() {
+    const modal = document.getElementById('exportModal');
+    modal.style.display = 'none';
+};
+
+// 设置日期范围
+window.setDateRange = function(range) {
+    const now = new Date();
+    const endDate = formatDateInput(now);
+    let startDate;
+
+    switch(range) {
+        case 'all':
+            // 设置为一个很早的日期
+            startDate = '2020-01-01';
+            break;
+        case 'week':
+            const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+            startDate = formatDateInput(weekAgo);
+            break;
+        case 'month':
+            const monthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            startDate = formatDateInput(monthAgo);
+            break;
+        case 'threeMonths':
+            const threeMonthsAgo = new Date(now - 90 * 24 * 60 * 60 * 1000);
+            startDate = formatDateInput(threeMonthsAgo);
+            break;
+        case 'year':
+            const yearAgo = new Date(now - 365 * 24 * 60 * 60 * 1000);
+            startDate = formatDateInput(yearAgo);
+            break;
+        default:
+            startDate = formatDateInput(new Date(now - 30 * 24 * 60 * 60 * 1000));
+    }
+
+    document.getElementById('exportStartDate').value = startDate;
+    document.getElementById('exportEndDate').value = endDate;
+};
+
+// 格式化日期为input[type=date]格式
+function formatDateInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 执行导出
+window.executeExport = async function() {
+    const startDate = document.getElementById('exportStartDate').value;
+    const endDate = document.getElementById('exportEndDate').value;
+
+    if (!startDate || !endDate) {
+        alert('请选择时间范围');
+        return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('开始时间不能晚于结束时间');
+        return;
+    }
+
+    // 获取选中的字段
+    const fields = {
+        person: document.getElementById('field_person').checked,
+        vehicle: document.getElementById('field_vehicle').checked,
+        reason: document.getElementById('field_reason').checked,
+        startTime: document.getElementById('field_startTime').checked,
+        endTime: document.getElementById('field_endTime').checked,
+        duration: document.getElementById('field_duration').checked,
+        status: document.getElementById('field_status').checked,
+        returnTime: document.getElementById('field_returnTime').checked
+    };
+
+    // 检查是否至少选择了一个字段
+    if (!Object.values(fields).some(v => v)) {
+        alert('请至少选择一个导出字段');
+        return;
+    }
+
+    try {
+        // 获取数据
+        const bookings = await dataManager.getAllBookings();
+        const vehicles = await dataManager.getAllVehicles();
+
+        // 筛选时间范围内的数据
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        const filteredBookings = bookings.filter(b => {
+            const bookingStart = new Date(b[FIELD_NAMES.startTime]);
+            return bookingStart >= start && bookingStart <= end;
+        });
+
+        if (filteredBookings.length === 0) {
+            alert('所选时间范围内没有预定记录');
+            return;
+        }
+
+        // 生成CSV
+        const csv = generateCSV(filteredBookings, vehicles, fields);
+
+        // 下载CSV文件
+        downloadCSV(csv, `预定数据_${startDate}_${endDate}.csv`);
+
+        // 关闭弹窗
+        closeExportModal();
+
+        alert(`成功导出 ${filteredBookings.length} 条记录`);
+
+    } catch (error) {
+        console.error('导出失败:', error);
+        alert('导出失败，请重试');
+    }
+};
+
+// 生成CSV内容
+function generateCSV(bookings, vehicles, fields) {
+    // 构建表头
+    const headers = [];
+    if (fields.person) headers.push('使用人');
+    if (fields.vehicle) headers.push('车辆名称');
+    if (fields.reason) headers.push('申请原因');
+    if (fields.startTime) headers.push('开始时间');
+    if (fields.endTime) headers.push('结束时间');
+    if (fields.duration) headers.push('使用时长(小时)');
+    if (fields.status) headers.push('状态');
+    if (fields.returnTime) headers.push('还车时间');
+
+    let csv = headers.join(',') + '\n';
+
+    // 按开始时间排序
+    bookings.sort((a, b) => new Date(a[FIELD_NAMES.startTime]) - new Date(b[FIELD_NAMES.startTime]));
+
+    // 构建数据行
+    bookings.forEach(booking => {
+        const row = [];
+
+        if (fields.person) {
+            row.push(escapeCSV(booking[FIELD_NAMES.person]));
+        }
+
+        if (fields.vehicle) {
+            const vehicle = vehicles.find(v => v.id === booking.vehicleId);
+            const vehicleName = vehicle ? (vehicle[FIELD_NAMES.model] || vehicle[FIELD_NAMES.vehicle]) : '未知车辆';
+            row.push(escapeCSV(vehicleName));
+        }
+
+        if (fields.reason) {
+            row.push(escapeCSV(booking[FIELD_NAMES.reason]));
+        }
+
+        if (fields.startTime) {
+            row.push(escapeCSV(formatDateTime(booking[FIELD_NAMES.startTime])));
+        }
+
+        if (fields.endTime) {
+            row.push(escapeCSV(formatDateTime(booking[FIELD_NAMES.endTime])));
+        }
+
+        if (fields.duration) {
+            const startTime = new Date(booking[FIELD_NAMES.startTime]);
+            const endTime = new Date(booking[FIELD_NAMES.endTime]);
+            const duration = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(1);
+            row.push(duration);
+        }
+
+        if (fields.status) {
+            row.push(booking.returned ? '已还车' : '使用中');
+        }
+
+        if (fields.returnTime) {
+            row.push(booking.returned ? escapeCSV(formatDateTime(booking.returnedAt)) : '-');
+        }
+
+        csv += row.join(',') + '\n';
+    });
+
+    return csv;
+}
+
+// 转义CSV特殊字符
+function escapeCSV(value) {
+    if (value == null) return '';
+
+    const str = String(value);
+
+    // 如果包含逗号、引号或换行，需要用引号包裹并转义内部引号
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+
+    return str;
+}
+
+// 下载CSV文件
+function downloadCSV(content, filename) {
+    // 添加BOM以支持Excel正确显示中文
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' });
+
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+}
+
+// 绑定导出按钮事件
+document.addEventListener('DOMContentLoaded', function() {
+    const exportBtn = document.getElementById('exportDataBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', openExportModal);
+    }
+
+    // 点击弹窗外部关闭
+    const modal = document.getElementById('exportModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeExportModal();
+            }
+        });
+    }
+});
+
