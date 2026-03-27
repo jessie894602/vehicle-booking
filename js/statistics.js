@@ -412,10 +412,10 @@ function renderMonthlyUtilizationTable(statistics) {
                     // 利用率评级
                     let rating = '未使用';
                     let ratingClass = 'rating-none';
-                    if (stat.utilization >= 50) {
+                    if (stat.utilization >= 60) {
                         rating = '高';
                         ratingClass = 'rating-high';
-                    } else if (stat.utilization >= 20) {
+                    } else if (stat.utilization >= 30) {
                         rating = '中';
                         ratingClass = 'rating-medium';
                     } else if (stat.utilization > 0) {
