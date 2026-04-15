@@ -3,7 +3,7 @@ class UserManager {
     constructor() {
         this.storageKey = 'vehicle_booking_user';
         // 管理员名单
-        this.adminList = ['高淑珺', '王聪'];
+        this.adminList = ['高淑珺', '王聪', '王嘉伟'];
         this.deviceId = null;
     }
 
