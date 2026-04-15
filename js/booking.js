@@ -118,6 +118,7 @@ async function loadVehicleDetail(vehicleId) {
         document.getElementById('vehicleCode').textContent = vehicle.code || '-';
         document.getElementById('vehicleVin').textContent = vehicle.vin || '-';
         document.getElementById('vehicleLocation').textContent = vehicle.location || vehicle.city || '-';
+        document.getElementById('vehicleStageDetail').textContent = vehicle.stage || '-';
         document.getElementById('vehicleVersion').textContent = vehicle.version || '-';
         document.getElementById('vehicleColor').textContent = vehicle.color || '-';
         document.getElementById('vehiclePlateNumber').textContent = vehicle.plateNumber || '暂无车牌';
