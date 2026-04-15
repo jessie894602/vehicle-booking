@@ -117,9 +117,8 @@ async function loadVehicleDetail(vehicleId) {
         document.getElementById('vehicleImage').alt = vehicle.model || '车辆图片';
         document.getElementById('vehicleCode').textContent = vehicle.code || '-';
         document.getElementById('vehicleVin').textContent = vehicle.vin || '-';
-        document.getElementById('vehicleVehicle').textContent = vehicle.vehicle || '-';
         document.getElementById('vehicleLocation').textContent = vehicle.location || vehicle.city || '-';
-        document.getElementById('vehicleStageDetail').textContent = vehicle.stage || '-';
+        document.getElementById('vehicleVersion').textContent = vehicle.version || '-';
         document.getElementById('vehicleColor').textContent = vehicle.color || '-';
         document.getElementById('vehiclePlateNumber').textContent = vehicle.plateNumber || '暂无车牌';
         document.getElementById('vehicleKeyLocation').textContent = vehicle.keyLocation || '未设置';
@@ -276,6 +275,8 @@ function formatDateTimeForInput(date) {
 async function handleBookingSubmit(e) {
     e.preventDefault();
 
+    const submitBtn = document.querySelector('#bookingForm .submit-btn');
+
     // 清除之前的提示
     hideAlert();
 
@@ -294,6 +295,12 @@ async function handleBookingSubmit(e) {
         return;
     }
 
+    // 禁用按钮，防止重复提交
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '提交中...';
+    }
+
     // 检查时间冲突
     const hasConflict = await dataManager.checkTimeConflict(
         currentVehicle.id,
@@ -303,6 +310,10 @@ async function handleBookingSubmit(e) {
 
     if (hasConflict) {
         showAlert('所选时间段与其他预定冲突，请重新选择时间', 'warning');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '提交预定';
+        }
         return;
     }
 
@@ -317,15 +328,13 @@ async function handleBookingSubmit(e) {
     };
 
     try {
-        // 保存预定
-        const savedBooking = await dataManager.addBooking(booking);
+        // 立即写入本地缓存，不等待网络（乐观更新）
+        const savedBooking = dataManager.addBookingLocal(booking);
 
-        // 注意：不需要保存用户姓名，因为已经在userManager中保存了
-
-        // 刷新预定历史记录
+        // 立即刷新预定历史（使用本地缓存，无需等待网络）
         await loadBookingHistory(currentVehicle.id);
 
-        // 显示成功消息
+        // 立即显示成功消息
         showAlert('预定成功！3秒后返回车辆列表...', 'success');
 
         // 清空表单
@@ -337,6 +346,11 @@ async function handleBookingSubmit(e) {
         // 重新填充用户姓名（因为reset会清空）
         await autoFillUserName();
 
+        // 后台异步保存到 JSONBin，不阻塞用户
+        dataManager.saveData().catch(error => {
+            console.error('后台保存失败:', error);
+        });
+
         // 3秒后跳转到首页并显示提示
         setTimeout(() => {
             window.location.href = `index.html?bookingSuccess=true&vehicle=${encodeURIComponent(currentVehicle.model || currentVehicle.vehicle)}`;
@@ -345,6 +359,10 @@ async function handleBookingSubmit(e) {
     } catch (error) {
         console.error('预定失败:', error);
         showAlert('预定失败，请重试', 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '提交预定';
+        }
     }
 }
 
