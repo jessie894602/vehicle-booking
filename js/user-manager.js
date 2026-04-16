@@ -1,8 +1,9 @@
-// 用户管理模块
+// 用户管理模块 - 更新于 2026-04-15 v3
+const USER_MANAGER_VERSION = '1.0.3';
 class UserManager {
     constructor() {
         this.storageKey = 'vehicle_booking_user';
-        // 管理员名单
+        // 管理员名单（高淑珺、王聪、王嘉伟）
         this.adminList = ['高淑珺', '王聪', '王嘉伟'];
         this.deviceId = null;
     }
