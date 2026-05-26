@@ -1,17 +1,24 @@
-FROM node:18-alpine
+FROM artifactory.chehejia.com/licloud-docker/base/run/node:22.13-bullseye-slim-artifactory
 
 WORKDIR /app
 
-# 安装依赖
-COPY package.json .
+ENV NODE_ENV=production \
+    NPM_CONFIG_REGISTRY=https://artifactory.ep.chehejia.com/artifactory/api/npm/licloud-npm/
+
+COPY package*.json ./
+
 RUN npm install --production
 
-# 复制项目文件
 COPY . .
 
-# 创建数据目录
 RUN mkdir -p /app/data
 
-EXPOSE 3000
+RUN groupadd -g 1000 appuser && \
+    useradd -m -u 1000 -g appuser appuser && \
+    chown -R appuser:appuser /app
 
-CMD ["node", "backend.js"]
+USER appuser
+
+EXPOSE 8080
+
+CMD ["npm", "start"]
