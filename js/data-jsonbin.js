@@ -150,16 +150,17 @@ const VEHICLES = [
 ];
 
 // 本地后端 API 封装（替代 JSONBin，解决公司内网访问问题）
+const API_BASE = '';
 const jsonbinAPI = {
     async get() {
-        const response = await fetch('/api/data');
+        const response = await fetch(API_BASE + '/api/data');
         if (!response.ok) throw new Error('读取数据失败: ' + response.status);
         const data = await response.json();
         return data.record;
     },
 
     async update(data) {
-        const response = await fetch('/api/data', {
+        const response = await fetch(API_BASE + '/api/data', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
