@@ -24,7 +24,7 @@ const FIELD_NAMES = {
 };
 
 // 车辆数据版本（更新后修改此值可自动同步JSONBin中的车辆数据）
-const VEHICLES_VERSION = '2026-04-15-v2';
+const VEHICLES_VERSION = '2026-06-29-v1';
 
 // 真实车辆数据（来自产品部车辆管理清单-4月15日.csv）
 const VEHICLES = [
