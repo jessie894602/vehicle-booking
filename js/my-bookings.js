@@ -1,9 +1,6 @@
 // 我的预定页面 - JavaScript
 
-// 页面初始化
-document.addEventListener('DOMContentLoaded', function() {
-    loadMyBookings();
-});
+// 页面初始化（由 my-bookings.html 在 userManager.init() 完成后调用）
 
 // 加载我的预定记录
 async function loadMyBookings() {

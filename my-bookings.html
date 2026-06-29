@@ -76,12 +76,13 @@
 
     <!-- 引入JavaScript文件 -->
     <script src="js/user-manager.js?v=20260303"></script>
-    <script src="js/data-jsonbin.js?v=20260303"></script>
+    <script src="js/data-jsonbin.js?v=20260527"></script>
     <script src="js/my-bookings.js?v=12"></script>
     <script>
-        // 初始化用户系统
+        // 初始化用户系统，完成后再加载预定记录
         document.addEventListener('DOMContentLoaded', async function() {
             await userManager.init();
+            loadMyBookings();
         });
     </script>
 </body>

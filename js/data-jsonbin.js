@@ -173,30 +173,33 @@ const jsonbinAPI = {
 class DataManager {
     constructor() {
         this.data = null;
+        this._loadPromise = null;
     }
 
     async loadData() {
-        if (!this.data) {
-            this.data = await jsonbinAPI.get();
-            // 确保数据结构正确
-            if (!this.data.bookings) {
-                this.data.bookings = [];
-            }
-            if (!this.data.deviceBindings) {
-                this.data.deviceBindings = {};
-            }
-            // 车辆数据版本检查：版本变化时自动用最新数据覆盖JSONBin中的车辆
-            if (this.data.vehiclesVersion !== VEHICLES_VERSION) {
-                console.log('车辆数据版本更新，同步最新数据到JSONBin...');
-                this.data.vehicles = VEHICLES;
-                this.data.vehiclesVersion = VEHICLES_VERSION;
-                await this.saveData();
-                console.log('车辆数据同步完成');
-            } else if (!this.data.vehicles) {
-                this.data.vehicles = VEHICLES;
-            }
+        if (this.data) return this.data;
+        if (!this._loadPromise) {
+            this._loadPromise = jsonbinAPI.get().then(async (record) => {
+                this.data = record;
+                if (!this.data.bookings) this.data.bookings = [];
+                if (!this.data.deviceBindings) this.data.deviceBindings = {};
+                if (this.data.vehiclesVersion !== VEHICLES_VERSION) {
+                    console.log('车辆数据版本更新，同步最新数据到JSONBin...');
+                    this.data.vehicles = VEHICLES;
+                    this.data.vehiclesVersion = VEHICLES_VERSION;
+                    await this.saveData();
+                    console.log('车辆数据同步完成');
+                } else if (!this.data.vehicles) {
+                    this.data.vehicles = VEHICLES;
+                }
+                this._loadPromise = null;
+                return this.data;
+            }).catch(err => {
+                this._loadPromise = null;
+                throw err;
+            });
         }
-        return this.data;
+        return this._loadPromise;
     }
 
     async saveData() {
