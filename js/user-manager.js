@@ -235,9 +235,15 @@ class UserManager {
         const boundUser = await dataManager.getDeviceBinding(deviceId);
 
         if (boundUser) {
-            // 设备已绑定用户，直接使用
-            console.log('设备已绑定用户:', boundUser);
-            this.saveUser(boundUser);
+            // 设备已绑定用户
+            // 如果本地已有用户名，以本地为准（防止JSONBin中的乱码数据覆盖正确记录）
+            const localUser = this.getCurrentUser();
+            if (!localUser) {
+                console.log('设备已绑定用户，写入本地:', boundUser);
+                this.saveUser(boundUser);
+            } else {
+                console.log('本地已有用户，保持不变:', localUser);
+            }
         } else {
             // 设备未绑定，检查是否首次访问
             if (this.isFirstVisit()) {
