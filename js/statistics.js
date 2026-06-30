@@ -13,17 +13,10 @@ window.initStatisticsPage = function() {
     console.log('当前用户:', userManager.getCurrentUser());
     console.log('是否管理员:', userManager.isAdmin());
 
-    // 根据用户权限加载不同的统计内容
-    if (userManager.isAdmin()) {
-        console.log('>>> 加载管理员统计视图');
-        // 管理员：加载全部车辆统计
-        loadStatistics();
-        bindEventListeners();
-    } else {
-        console.log('>>> 加载普通用户统计视图');
-        // 普通用户：加载个人统计
-        loadPersonalStatistics();
-    }
+    // 加载全部车辆统计（所有用户均可查看）
+    console.log('>>> 加载全部车辆统计');
+    loadStatistics();
+    bindEventListeners();
 };
 
 // 计算工作时间内的使用时长（09:00-18:00，末尾日可延伸至实际结束时间）

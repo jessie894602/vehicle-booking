@@ -10,31 +10,20 @@ async function loadMyBookings() {
     const userNameSpan = document.getElementById('userName');
 
     try {
-        // 获取当前用户
+        // 获取当前用户（仅用于显示，不影响数据）
         const currentUser = userManager.getCurrentUser();
+        const isAdmin = true; // 所有用户都显示全部记录
 
-        if (!currentUser) {
-            showError('未找到用户信息，请返回首页');
-            return;
+        // 显示用户名
+        if (currentUser) {
+            userNameSpan.innerHTML = `👤 ${currentUser}`;
         }
-
-        // 检查是否是管理员
-        const isAdmin = userManager.isAdmin();
-
-        // 显示用户名（管理员带标识）
-        const adminBadge = isAdmin ? ' <span class="admin-badge-inline">管理员</span>' : '';
-        userNameSpan.innerHTML = `👤 ${currentUser}${adminBadge}`;
 
         // 获取所有预定记录
         const allBookings = await dataManager.getAllBookings();
 
-        // 筛选预定记录：管理员看所有记录，普通用户只看自己的
-        let myBookings;
-        if (isAdmin) {
-            myBookings = allBookings; // 管理员看所有记录
-        } else {
-            myBookings = allBookings.filter(b => b[FIELD_NAMES.person] === currentUser); // 普通用户只看自己的
-        }
+        // 显示所有预定记录
+        let myBookings = allBookings;
 
         // 隐藏加载状态
         loadingState.classList.add('hidden');
