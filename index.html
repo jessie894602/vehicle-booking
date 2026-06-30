@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="车辆预定系统 - 浏览和预定可用车辆">
+    <!-- v2 -->
     <title>车辆预定系统 - 车辆列表</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -25,16 +26,16 @@
     <!-- 主体内容 -->
     <main class="main-content">
         <div class="container">
-            <!-- 预定提示框 -->
+            <!-- 预定提示 -->
             <div id="bookingNotification" class="booking-notification hidden">
                 <div class="notification-content">
-                    <span class="notification-icon">✓</span>
+                    <span class="notification-icon">✅</span>
                     <span class="notification-message"></span>
                     <button class="notification-close" onclick="closeNotification()">×</button>
                 </div>
             </div>
 
-            <h1 class="page-title">可预定车辆 <span class="page-subtitle">预定操作指南：1.点击绿色时间按钮，可拖拽多选，每个绿色格子代表一小时 2.点击蓝色"预定"按钮进入详情页进行预定</span></h1>
+            <h1 class="page-title">可预定车辆<span class="page-subtitle">预定操作指南：1.点击绿色时间按钮，可拖拽多选，每个绿色格子代表一小时 2.点击蓝色"预定"按钮进入详情页进行预定</span></h1>
 
             <!-- 时间表头（只显示一次） -->
             <div id="scheduleHeader" class="schedule-header-fixed hidden"></div>
@@ -65,7 +66,7 @@
 
     <!-- 引入JavaScript文件 -->
     <script src="js/user-manager.js?v=20260303"></script>
-    <script src="js/data-jsonbin.js?v=20260303"></script>
+    <script src="js/data-jsonbin.js?v=20260527"></script>
     <script src="js/app.js?v=11"></script>
     <script>
         // 初始化用户系统

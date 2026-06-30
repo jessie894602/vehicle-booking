@@ -1,6 +1,6 @@
 // 车辆使用统计 - JavaScript
-// 更新时间: 2026-03-02 17:10
-// 版本: v2.1 - 修复初始化顺序
+// 更新时间: 2026-04-16 16:00
+// 版本: v2.5 - 修复字段读取
 
 console.log('=== Statistics.js 加载成功 ===');
 console.log('文件版本: v2.1');
@@ -25,6 +25,51 @@ window.initStatisticsPage = function() {
         loadPersonalStatistics();
     }
 };
+
+// 计算工作时间内的使用时长（09:00-18:00，末尾日可延伸至实际结束时间）
+function calculateWorkingHours(startTime, endTime) {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    if (end <= start) return 0;
+
+    let totalHours = 0;
+
+    // 当前遍历日（从开始日的零点开始）
+    const currentDay = new Date(start);
+    currentDay.setHours(0, 0, 0, 0);
+
+    const endDay = new Date(end);
+    endDay.setHours(0, 0, 0, 0);
+
+    while (currentDay <= endDay) {
+        const isLastDay = currentDay.getTime() === endDay.getTime();
+
+        // 工作时段起点：09:00
+        const dayWorkStart = new Date(currentDay);
+        dayWorkStart.setHours(9, 0, 0, 0);
+
+        // 工作时段终点：非末尾日为18:00，末尾日延伸至实际结束时间（可超过18:00）
+        const dayWorkEnd = new Date(currentDay);
+        if (isLastDay) {
+            dayWorkEnd.setHours(end.getHours(), end.getMinutes(), end.getSeconds(), end.getMilliseconds());
+        } else {
+            dayWorkEnd.setHours(18, 0, 0, 0);
+        }
+
+        // 取有效交集
+        const effectiveStart = new Date(Math.max(start.getTime(), dayWorkStart.getTime()));
+        const effectiveEnd = new Date(Math.min(end.getTime(), dayWorkEnd.getTime()));
+
+        if (effectiveEnd > effectiveStart) {
+            totalHours += (effectiveEnd - effectiveStart) / (1000 * 60 * 60);
+        }
+
+        currentDay.setDate(currentDay.getDate() + 1);
+    }
+
+    return totalHours;
+}
 
 // 加载普通用户的个人统计
 async function loadPersonalStatistics() {
@@ -69,8 +114,11 @@ function calculatePersonalStats(bookings, vehicles) {
 
     bookings.forEach(booking => {
         const startTime = new Date(booking[FIELD_NAMES.startTime]);
-        const endTime = new Date(booking[FIELD_NAMES.endTime]);
-        const duration = (endTime - startTime) / (1000 * 60 * 60);
+        // 如果已还车，使用实际还车时间；否则使用预定结束时间
+        const endTime = booking.returned && booking.returnedAt
+            ? new Date(booking.returnedAt)
+            : new Date(booking[FIELD_NAMES.endTime]);
+        const duration = calculateWorkingHours(startTime, endTime);
 
         totalHours += duration;
         usedVehicles.add(booking.vehicleId);
@@ -148,9 +196,10 @@ function renderPersonalRecords(bookings, vehicles) {
                     <th>车辆</th>
                     <th>申请原因</th>
                     <th>开始时间</th>
-                    <th>结束时间</th>
+                    <th>预定结束</th>
+                    <th>实际还车</th>
                     <th>使用时长</th>
-                    <th>还车时间</th>
+                    <th>偏差</th>
                 </tr>
             </thead>
             <tbody>
@@ -160,8 +209,24 @@ function renderPersonalRecords(bookings, vehicles) {
                     const vehicleImage = vehicle ? vehicle.image : 'images/default.jpg';
 
                     const startTime = new Date(booking[FIELD_NAMES.startTime]);
-                    const endTime = new Date(booking[FIELD_NAMES.endTime]);
-                    const duration = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(1);
+                    const plannedEndTime = new Date(booking[FIELD_NAMES.endTime]);
+                    const actualEndTime = booking.returned && booking.returnedAt
+                        ? new Date(booking.returnedAt)
+                        : plannedEndTime;
+
+                    // 计算实际使用时长（使用实际还车时间）
+                    const actualDuration = calculateWorkingHours(startTime, actualEndTime).toFixed(1);
+
+                    // 计算预定时长
+                    const plannedDuration = calculateWorkingHours(startTime, plannedEndTime).toFixed(1);
+
+                    // 计算偏差（分钟）
+                    const deviationMinutes = Math.round((actualEndTime - plannedEndTime) / (1000 * 60));
+                    const deviationText = deviationMinutes === 0
+                        ? '准时'
+                        : (deviationMinutes > 0
+                            ? `<span style="color: #E94B3C;">+${deviationMinutes}分钟</span>`
+                            : `<span style="color: #4CAF50;">${deviationMinutes}分钟</span>`);
 
                     return `
                         <tr>
@@ -178,8 +243,9 @@ function renderPersonalRecords(bookings, vehicles) {
                             <td class="history-reason">${booking[FIELD_NAMES.reason]}</td>
                             <td>${formatDateTime(booking[FIELD_NAMES.startTime])}</td>
                             <td>${formatDateTime(booking[FIELD_NAMES.endTime])}</td>
-                            <td class="number-cell">${duration}小时</td>
                             <td>${formatDateTime(booking.returnedAt)}</td>
+                            <td class="number-cell">${actualDuration}小时</td>
+                            <td class="number-cell">${deviationText}</td>
                         </tr>
                     `;
                 }).join('')}
@@ -296,7 +362,7 @@ async function loadStatistics() {
 // 计算统计数据
 function calculateStatistics(vehicles, bookings) {
     const now = new Date();
-    const stats30Days = 30 * 24; // 30天的总小时数
+    const stats30Days = 22 * 9; // 30天工作时间（约22个工作日 × 9小时）
 
     return vehicles.map(vehicle => {
         // 筛选该车辆的预定记录
@@ -313,8 +379,11 @@ function calculateStatistics(vehicles, bookings) {
 
         vehicleBookings.forEach(booking => {
             const startTime = new Date(booking.startTime);
-            const endTime = new Date(booking.endTime);
-            const duration = (endTime - startTime) / (1000 * 60 * 60); // 转换为小时
+            // 如果已还车，使用实际还车时间；否则使用预定结束时间
+            const endTime = booking.returned && booking.returnedAt
+                ? new Date(booking.returnedAt)
+                : new Date(booking.endTime);
+            const duration = calculateWorkingHours(startTime, endTime); // 转换为小时
 
             totalHours += duration;
             users.add(booking.person);
@@ -365,21 +434,12 @@ function calculateStatistics(vehicles, bookings) {
 // 渲染车辆统计列表
 function renderVehicleStatistics(statistics) {
     const emptyState = document.getElementById('emptyState');
-
-    // 检查是否有使用数据
-    const hasUsage = statistics.some(stat => stat.totalUsages > 0);
-
-    if (!hasUsage) {
-        emptyState.classList.remove('hidden');
-        return;
-    }
-
     emptyState.classList.add('hidden');
 
     // 按使用次数降序排序
     statistics.sort((a, b) => b.totalUsages - a.totalUsages);
 
-    // 只渲染月度使用率分析表
+    // 渲染月度使用率分析表（即使没有使用记录也显示）
     renderMonthlyUtilizationTable(statistics);
 }
 
@@ -527,17 +587,34 @@ async function toggleVehicleDetail(vehicleId) {
                         <th>使用人</th>
                         <th>申请原因</th>
                         <th>开始时间</th>
-                        <th>结束时间</th>
+                        <th>预定结束</th>
+                        <th>实际结束</th>
                         <th>使用时长</th>
+                        <th>偏差</th>
                         <th>状态</th>
-                        <th>还车时间</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${vehicleBookings.map(booking => {
                         const startTime = new Date(booking[FIELD_NAMES.startTime]);
-                        const endTime = new Date(booking[FIELD_NAMES.endTime]);
-                        const duration = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(1);
+                        const plannedEndTime = new Date(booking[FIELD_NAMES.endTime]);
+                        const actualEndTime = booking.returned && booking.returnedAt
+                            ? new Date(booking.returnedAt)
+                            : plannedEndTime;
+
+                        // 计算实际使用时长
+                        const actualDuration = calculateWorkingHours(startTime, actualEndTime).toFixed(1);
+
+                        // 计算偏差（分钟）
+                        const deviationMinutes = Math.round((actualEndTime - plannedEndTime) / (1000 * 60));
+                        const deviationText = booking.returned
+                            ? (deviationMinutes === 0
+                                ? '准时'
+                                : (deviationMinutes > 0
+                                    ? `<span style="color: #E94B3C;">+${deviationMinutes}分</span>`
+                                    : `<span style="color: #4CAF50;">${deviationMinutes}分</span>`))
+                            : '-';
+
                         const isReturned = booking.returned;
 
                         return `
@@ -546,13 +623,14 @@ async function toggleVehicleDetail(vehicleId) {
                                 <td class="history-reason">${booking[FIELD_NAMES.reason]}</td>
                                 <td>${formatDateTime(booking[FIELD_NAMES.startTime])}</td>
                                 <td>${formatDateTime(booking[FIELD_NAMES.endTime])}</td>
-                                <td class="number-cell">${duration}小时</td>
+                                <td>${isReturned ? formatDateTime(booking.returnedAt) : '-'}</td>
+                                <td class="number-cell">${actualDuration}小时</td>
+                                <td class="number-cell">${deviationText}</td>
                                 <td>
                                     <span class="status-badge ${isReturned ? 'status-returned' : 'status-active'}">
                                         ${isReturned ? '已还车' : '使用中'}
                                     </span>
                                 </td>
-                                <td>${isReturned ? formatDateTime(booking.returnedAt) : '-'}</td>
                             </tr>
                         `;
                     }).join('')}
@@ -807,8 +885,11 @@ function generateCSV(bookings, vehicles, fields) {
 
         if (fields.duration) {
             const startTime = new Date(booking[FIELD_NAMES.startTime]);
-            const endTime = new Date(booking[FIELD_NAMES.endTime]);
-            const duration = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(1);
+            // 如果已还车，使用实际还车时间；否则使用预定结束时间
+            const endTime = booking.returned && booking.returnedAt
+                ? new Date(booking.returnedAt)
+                : new Date(booking[FIELD_NAMES.endTime]);
+            const duration = calculateWorkingHours(startTime, endTime).toFixed(1);
             row.push(duration);
         }
 

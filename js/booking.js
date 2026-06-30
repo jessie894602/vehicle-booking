@@ -111,17 +111,15 @@ async function loadVehicleDetail(vehicleId) {
         bookingFormContainer.classList.remove('hidden');
 
         // 填充车辆信息
-        document.getElementById('vehicleModel').textContent = vehicle.model || vehicle.vehicle || '-';
-        document.getElementById('vehicleStage').textContent = vehicle.stage || '-';
-        document.getElementById('vehicleImage').src = vehicle.image || '';
-        document.getElementById('vehicleImage').alt = vehicle.model || '车辆图片';
-        document.getElementById('vehicleCode').textContent = vehicle.code || '-';
-        document.getElementById('vehicleVin').textContent = vehicle.vin || '-';
-        document.getElementById('vehicleLocation').textContent = vehicle.location || vehicle.city || '-';
-        document.getElementById('vehicleStageDetail').textContent = vehicle.stage || '-';
-        document.getElementById('vehicleVersion').textContent = vehicle.version || '-';
-        document.getElementById('vehicleColor').textContent = vehicle.color || '-';
-        document.getElementById('vehiclePlateNumber').textContent = vehicle.plateNumber || '暂无车牌';
+        document.getElementById('vehicleModel').textContent = vehicle[FIELD_NAMES.model] || vehicle[FIELD_NAMES.vehicle] || vehicle.model || vehicle.vehicle || '-';
+        document.getElementById('vehicleStage').textContent = vehicle[FIELD_NAMES.stage] || vehicle.stage || '-';
+        document.getElementById('vehicleCode').textContent = vehicle[FIELD_NAMES.code] || vehicle.code || '-';
+        document.getElementById('vehicleVin').textContent = vehicle[FIELD_NAMES.vin] || vehicle.vin || '-';
+        document.getElementById('vehicleLocation').textContent = vehicle[FIELD_NAMES.location] || vehicle[FIELD_NAMES.city] || vehicle.location || vehicle.city || '-';
+        document.getElementById('vehicleStageDetail').textContent = vehicle[FIELD_NAMES.stage] || vehicle.stage || '-';
+        document.getElementById('vehicleVersion').textContent = vehicle[FIELD_NAMES.version] || vehicle.version || '-';
+        document.getElementById('vehicleColor').textContent = vehicle[FIELD_NAMES.color] || vehicle.color || '-';
+        document.getElementById('vehiclePlateNumber').textContent = vehicle[FIELD_NAMES.plateNumber] || vehicle.plateNumber || '暂无车牌';
         document.getElementById('vehicleKeyLocation').textContent = vehicle.keyLocation || '未设置';
 
         // 加载预定历史记录

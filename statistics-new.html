@@ -56,7 +56,7 @@
                     <div class="stat-icon">⏱️</div>
                     <div class="stat-info">
                         <div class="stat-value" id="totalHours">0</div>
-                        <div class="stat-label">总使用时长(小时)</div>
+                        <div class="stat-label">总使用时长（小时）</div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -152,18 +152,12 @@
 
     <!-- 引入JavaScript文件 -->
     <script src="js/user-manager.js?v=20260303"></script>
-    <script src="js/data-jsonbin.js?v=20260303"></script>
-    <script src="js/statistics.js?v=20260302171000"></script>
+    <script src="js/data-jsonbin.js?v=20260527"></script>
+    <script src="js/statistics.js?v=20260416b"></script>
     <script>
         // 初始化用户系统，然后加载统计页面
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('=== HTML: 开始初始化 ===');
             await userManager.init();
-            console.log('=== HTML: 用户管理器初始化完成 ===');
-            console.log('当前用户:', userManager.getCurrentUser());
-            console.log('是否管理员:', userManager.isAdmin());
-
-            // 触发统计页面初始化
             window.initStatisticsPage();
         });
     </script>
